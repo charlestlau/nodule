@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lung Nodule Management</title>
+<style>
+html,body{font:16px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#fafafa;color:#111}
+.wrap{max-width:1080px;margin:20px auto;padding:0 14px}
+h1{font-size:1.55rem;margin:.2rem 0 .8rem}
+h2{font-size:1.1rem;margin:1.2rem 0 .4rem}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));grid-gap:12px}
+label{display:block;margin:.3rem 0 .15rem;font-weight:600}
+select,input[type="number"],input[type="text"]{width:100%;padding:.55rem .6rem;border:1px solid #dcdcdc;border-radius:10px;background:#fff}
+.row{margin:.4rem 0}
+.muted{color:#666;font-size:.9rem}
+.out{white-space:pre-wrap;background:#0b1520;color:#d9f1ff;padding:1rem;border-radius:12px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+button{border:0;background:#0d5bd7;color:#fff;padding:.7rem 1rem;border-radius:10px;font-weight:700;cursor:pointer}
+button.secondary{background:#f0f3f8;color:#0d1b2a}
+.inline{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.footer{font-size:.85rem;color:#555;margin-top:10px}
+details{background:#f6f8fb;border-radius:10px;padding:.6rem .8rem;border:1px solid #e5eaf1}
+summary{cursor:pointer;font-weight:600}
+a{color:#0d5bd7}
+.tabbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tabbar button{background:#e9eef6;color:#102a43;border-radius:999px;padding:.5rem .9rem;border:1px solid #dbe4f0}
+.tabbar button.active{background:#0d5bd7;color:#fff;border-color:#0d5bd7}
+.section{display:none}
+.section.active{display:block}
+#errbar{position:fixed;left:10px;bottom:10px;z-index:9999;max-width:90%;display:none;background:#ffe8e8;color:#610404;border:1px solid #f5b5b5;border-radius:8px;padding:8px 10px;font:13px/1.4 system-ui}
+.nodule-box {background:#eaf4ff;border-radius:10px;padding:10px;margin-top:8px;}
+.modebox{border:1px solid #e5eaf1;border-radius:10px;padding:10px;margin-top:8px}
+
+.chip-group{display:flex;gap:8px;flex-wrap:wrap;margin:.25rem 0 .35rem}
+.chip{padding:.4rem .75rem;
+  border:1px solid #a0a7b5;
+  border-radius:999px;
+  background:#f4f7fb;
+  color:#333;
+  cursor:pointer;
+  user-select:none}
+.chip.active{background:#0d5bd7;color:#fff;border-color:#0d5bd7}
+.chip:hover:not(.active){background:#e2e7f2}
+.chip:focus{outline:2px solid #9ec3ff;outline-offset:2px}
+.chip-muted{opacity:.85}
+.hidden-select{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}
+.small-muted{color:#666;font-size:.9rem}
+</style>
+</head>
+<body>
+<div id="errbar"></div>
+<div class="wrap">
+  <h1>Lung Nodule Management</h1>
+  <div class="tabbar">
+    <button class="active" data-tab="fleischner">Fleischner (Incidental)</button>
+    <button data-tab="lungrads">Lung-RADS (Screening)</button>
+  </div>
+
+  <!-- FLEISCHNER SECTION -->
+  <section id="fleischner" class="section active">
+    <div class="card" style="margin-bottom:12px">
+      <div class="grid">
+        <div>
+          <h2>Patient / Context</h2>
+          <div class="row">
+            <label>Immunocompetent &amp; no known cancer?</label>
+            <select id="fl_isEligible">
+              <option value="yes" selected>Yes (use Fleischner)</option>
+              <option value="no">No (Fleischner not applicable)</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>Age</label>
+            <select id="fl_agegrp">
+              <option value="ge35" selected>&ge;35 years old</option>
+              <option value="lt35">&lt;35 years old</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>Risk level</label>
+            <select id="fl_risk">
+              <option value="low">Low</option>
+              <option value="high">High (e.g., heavy smoker, spiculation, upper lobe, family hx)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="nodule-box">
+          <h2>Nodule</h2>
+          <div class="row">
+            <label>Single vs multiple nodules</label>
+            <select id="fl_multiplicity">
+              <option value="single">Single</option>
+              <option value="multiple">Multiple</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>Type</label>
+            <select id="fl_type">
+              <option value="solid">Solid</option>
+              <option value="partsolid">Part‑solid</option>
+              <option value="nonsolid">Pure ground‑glass</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>Total mean diameter</label>
+            <select id="fl_sizecat">
+              <option value="lt6">&lt;6 mm</option>
+              <option value="6to8" selected>6–8 mm</option>
+              <option value="gt8">&gt;8 mm</option>
+            </select>
+          </div>
+          <div class="row" id="fl_solidCompRow">
+            <label>Solid component — for part‑solid</label>
+            <select id="fl_sccat">
+              <option value="lt6" selected>&lt;6 mm</option>
+              <option value="ge6">&ge;6 mm</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="inline" style="margin-top:10px">
+        <button id="fl_compute">Compute recommendation</button>
+        <button class="secondary" id="fl_reset">Reset</button>
+        <div class="muted">Fleischner Society 2017 guidelines apply to incidentally detected nodules in adults &gt;35 years, immunocompetent, with no known cancer.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Result</h2>
+      <div id="fl_result" class="out">Fill inputs and click “Compute recommendation”.</div>
+      <div id="fl_notes" class="footer"></div>
+    </div>
+
+    <details class="card" style="margin-top:12px">
+      <summary>QA: Fleischner quick‑tests (auto‑fill &amp; run)</summary>
+      <p class="muted">Prefills inputs, runs the calculator, and checks the output text for an expected phrase.</p>
+      <div id="qa_status" class="muted" style="margin:.3rem 0 .6rem"></div>
+      <div class="grid" id="qa_grid"></div>
+    </details>
+  </section>
+
+  <!-- LUNG-RADS SECTION -->
+  <section id="lungrads" class="section">
+    <div class="card" style="margin-bottom:12px">
+      <div class="grid">
+        <div>
+          <h2>Context</h2>
+          <div class="row">
+            <label>Exam situation</label>
+            <select id="lr_examSituation">
+              <option value="routine">Routine screening interpretation</option>
+              <option value="awaiting_prior">Prior chest CT being located (temporary)</option>
+              <option value="suspected_infectious">Findings suggest infectious/inflammatory</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>Additional suspicious features (4X)</label>
+            <select id="lr_extraSuspicious">
+              <option value="none" selected>None</option>
+              <option value="spiculation">Spiculation</option>
+              <option value="lad">Lymphadenopathy</option>
+              <option value="mets">Frank metastatic disease</option>
+              <option value="ggn_double">GGN doubles in size in 1 year</option>
+            </select>
+            <div class="muted">If any of these are present, any case that would otherwise be Lung-RADS 3, 4A, or 4B becomes 4X.</div>
+          </div>
+        </div>
+
+        <div>
+          <h2>Finding type</h2>
+          <div class="row">
+            <label>Select one</label>
+            <select id="lr_mode" onchange="try{showMode(); if(this.value==='partsolid') togglePartSolidSC();}catch(e){}">
+              <option value="solid" selected>Solid nodule</option>
+              <option value="partsolid">Part solid nodule</option>
+              <option value="nonsolid">Non solid nodule (GGN)</option>
+              <option value="juxta">Juxtapleural nodule</option>
+              <option value="airway">Airway nodule</option>
+              <option value="cyst">Atypical pulmonary cyst</option>
+              <option value="benign">Nodule with benign features</option>
+              <option value="none">No nodule</option>
+            </select>
+          </div>
+
+          <!-- Mode containers -->
+          <div id="mode_solid" class="modebox">
+            <h2>Nodule (Solid)</h2>
+            <div class="row">
+              <label>Behavior on current exam</label>
+              <select id="lr_behavior_solid">
+                <option value="baseline" selected>Baseline (first detection)</option>
+                <option value="new">New</option>
+                <option value="growing">Growing (≥1.5 mm mean within 12 mo)</option>
+                <option value="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</option>
+              </select>
+              <div class="muted">“Growing” = &gt; 1.5 mm mean diameter increase within 12 months.</div>
+            </div>
+            <div class="row">
+              <label>Total mean diameter (mm)</label>
+              <select id="lr_size_solid_cat">
+  <option value="lt4">&lt;4.0 mm</option>
+  <option value="4to5_9">4.0 to 5.9 mm</option>
+  <option value="6to7_9" selected>6.0 to 7.9 mm</option>
+  <option value="8to9_9">8.0 to 9.9 mm</option>
+  <option value="10to14_9">10.0 to 14.9 mm</option>
+  <option value="15to29_9">15.0 to 29.9 mm</option>
+  <option value="ge30">&ge;30.0 mm</option>
+</select>
+            </div>
+          </div>
+
+          <div id="mode_partsolid" class="modebox" style="display:none">
+            <h2>Nodule (Part solid)</h2>
+            <div class="row">
+              <label>Behavior on current exam</label>
+              <select id="lr_behavior_part" onchange="try{togglePartSolidSC();}catch(e){}">
+        <option value="baseline" selected>Baseline</option>
+        <option value="new_nodule">New nodule</option>
+        <option value="new_solid">New or growing solid component in existing nodule</option>
+      </select>
+            </div>
+            <div class="row">
+              <label>Total mean diameter (mm)</label>
+              <select id="lr_size_part_cat">
+  <option value="lt4">&lt;4.0 mm</option>
+  <option value="4to5_9">4.0 to 5.9 mm</option>
+  <option value="6to7_9" selected>6.0 to 7.9 mm</option>
+  <option value="8to9_9">8.0 to 9.9 mm</option>
+  <option value="10to14_9">10.0 to 14.9 mm</option>
+  <option value="15to29_9">15.0 to 29.9 mm</option>
+  <option value="ge30">&ge;30.0 mm</option>
+</select>
+            </div>
+            <div class="row" id="lr_solidCompRow_part">
+              <label>Solid component (mm)</label>
+              <select id="lr_solidComp_part_cat">
+  <option value="lt4">0.1 to 3.9 mm</option>
+  <option value="4to5_9">4.0 to 5.9 mm</option>
+  <option value="6to7_9">6.0 to 7.9 mm</option>
+  <option value="ge8">&ge;8.0 mm</option>
+</select>
+            </div>
+          </div>
+
+          <div id="mode_nonsolid" class="modebox" style="display:none">
+            <h2>Nodule (Non solid / GGN)</h2>
+            <div class="row">
+              <label>Behavior on current exam</label>
+              <select id="lr_behavior_ns">
+                <option value="baseline">Baseline (first detection)</option>
+                <option value="new">New</option>
+                <option value="growing">Growing (≥1.5 mm mean within 12 mo)</option>
+                <option value="stable">Stable / decreased</option>
+                <option value="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</option>
+              </select>
+            </div>
+            <div class="row">
+              <label>Total mean diameter (mm)</label>
+              <select id="lr_size_ns_cat">
+  <option value="lt4">&lt;4.0 mm</option>
+  <option value="4to5_9">4.0 to 5.9 mm</option>
+  <option value="6to7_9" selected>6.0 to 7.9 mm</option>
+  <option value="8to9_9">8.0 to 9.9 mm</option>
+  <option value="10to14_9">10.0 to 14.9 mm</option>
+  <option value="15to29_9">15.0 to 29.9 mm</option>
+  <option value="ge30">&ge;30.0 mm</option>
+</select>
+            </div>
+          </div>
+
+          <div id="mode_juxta" class="modebox" style="display:none">
+            <h2>Juxtapleural nodule</h2>
+            <div class="row">
+              <label>Behavior on current exam</label>
+              <select id="lr_behavior_juxta">
+                <option value="baseline" selected>Baseline (first detection)</option>
+                <option value="new">New</option>
+              </select>
+            </div>
+            <div class="row">
+              <label>Total mean diameter (mm)</label>
+              <select id="lr_size_juxta_cat">
+  <option value="lt4">&lt;4.0 mm</option>
+  <option value="4to5_9">4.0 to 5.9 mm</option>
+  <option value="6to7_9" selected>6.0 to 7.9 mm</option>
+  <option value="8to9_9">8.0 to 9.9 mm</option>
+  <option value="10to14_9">10.0 to 14.9 mm</option>
+  <option value="15to29_9">15.0 to 29.9 mm</option>
+  <option value="ge30">&ge;30.0 mm</option>
+</select>
+            </div>
+            <div class="row">
+              <label>Benign-appearing juxtapleural morphology?</label>
+              <select id="lr_juxta_benign">
+                <option value="yes" selected>Yes — Solid; smooth margins; and oval, lentiform, or triangular shape</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="muted">If benign morphology is present and size <10 mm, assign Lung‑RADS 2. Otherwise, treat like a solid nodule.</div>
+            <div class="row">
+            </div>
+            <div class="muted">Currently treated like a solid nodule for category calculation. (We can refine per v2022 specs if you like.)</div>
+          </div>
+
+          <div id="mode_airway" class="modebox" style="display:none">
+            <h2>Airway nodule</h2>
+            <div class="row">
+              <label>Airway location</label>
+              <select id="lr_airway_mode">
+                <option value="subsegmental">Subsegmental / multiple tubular (no soft tissue nodule)</option>
+                <option value="segmental_baseline">Segmental or more proximal — current exam</option>
+                <option value="segmental_persistent">Segmental/proximal that persisted from 3‑mo FU</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="mode_cyst" class="modebox" style="display:none">
+            <h2>Atypical pulmonary cyst</h2>
+            <div class="row">
+              
+<label>Cyst subtype</label>
+<div id="cyst_ui">
+  <div>
+    <label class="small-muted">Current morphology</label>
+    <div class="chip-group" id="cyst_morph" data-value="thin">
+      <button type="button" class="chip active" data-val="thin">Thin-walled</button>
+      <button type="button" class="chip" data-val="thick">Thick-walled</button>
+      <button type="button" class="chip" data-val="multiloc">Multilocular</button>
+    </div>
+  </div>
+  <div>
+    <label class="small-muted">Status</label>
+    <div class="chip-group" id="cyst_status" data-value="baseline">
+      <button type="button" class="chip active" data-val="baseline">Baseline</button>
+      <button type="button" class="chip" data-val="progression">Progression</button>
+      <button type="button" class="chip" data-val="growing_cystic">Growing cystic component</button>
+    </div>
+  </div>
+  <div id="cyst_prog_details" style="display:none">
+    <label class="small-muted">Progression details (optional)</label>
+    <div class="chip-group" id="cyst_progchips">
+      <button type="button" class="chip chip-muted" data-val="becomes_multiloc">Becomes multilocular</button>
+      <button type="button" class="chip chip-muted" data-val="increased_loculation">Increased loculation</button>
+      <button type="button" class="chip chip-muted" data-val="growing_wall_or_nodularity">Growing wall thickness/nodularity</button>
+      <button type="button" class="chip chip-muted" data-val="new_or_increased_opacity">New/increased opacity</button>
+      <button type="button" class="chip chip-muted" data-val="growing_multiloc">Growing multilocular cyst</button>
+    </div>
+  </div>
+  <!-- Hidden select preserved for compatibility with existing compute logic -->
+  <select id="lr_cyst_mode" class="hidden-select">
+    <option value="3_growing_cystic">3_growing_cystic</option>
+    <option value="4a_thick_or_multiloc">4a_thick_or_multiloc</option>
+    <option value="4b_progression">4b_progression</option>
+    <option value="2_thin_baseline">2_thin_baseline</option>
+  </select>
+</div>
+
+            </div>
+          </div>
+
+          <div id="mode_benign" class="modebox" style="display:none">
+            <h2>Nodule with benign features</h2>
+            <div class="muted">Benign calcified or fat-containing nodule, typical perifissural, etc.</div>
+          </div>
+
+          <div id="mode_none" class="modebox" style="display:none">
+            <h2>No nodule</h2>
+            <div class="muted">No lung nodules present.</div>
+          </div>
+        </div>
+      </div>
+      <div class="inline" style="margin-top:10px">
+        <button id="lr_compute">Compute category</button>
+        <button class="secondary" id="lr_diag_btn" type="button">Diagnose UI</button>
+        <button class="secondary" id="lr_reset">Reset</button>
+        <div class="muted">ACR Lung-RADS® v2022.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Result</h2>
+      <div id="lr_result" class="out">Fill inputs and click “Compute category”.</div>
+      <div id="lr_notes" class="footer"></div>
+    </div>
+  </section>
+
+  <details style="margin-top:12px">
+    <summary>About &amp; references</summary>
+    <p>Encodes: (1) ACR Lung-RADS® v2022 decision rules (screening) including airway/cyst special cases, slow-growing notes, and 4X features with S-modifier (S input hidden per your request); and (2) Fleischner Society 2017 recommendations for incidentally detected nodules in adults &ge;35 years (immunocompetent, no known cancer).</p>
+    <p class="muted">Educational use only; verify against the full guideline text and institutional policy.</p>
+  </details>
+</div>
+
+<script>
+(function(){
+  function err(msg){ try{var bar=document.getElementById('errbar'); bar.textContent=msg; bar.style.display='block';}catch(e){} }
+  window.addEventListener('error', function(e){ err('Script error: ' + (e.message||'(unknown)')); });
+
+  function mm(v){ v=parseFloat(v); return isNaN(v)?0:v; }
+  function byId(id){ return document.getElementById(id); }
+
+  function setupTabs(){
+    var btns = document.querySelectorAll('.tabbar button');
+    function showTab(t){
+      var i;
+      for(i=0;i<btns.length;i++){ btns[i].classList.remove('active'); }
+      for(i=0;i<btns.length;i++){
+        if(btns[i].getAttribute('data-tab')===t){ btns[i].classList.add('active'); }
+      }
+      var secs=document.querySelectorAll('.section');
+      for(i=0;i<secs.length;i++){ secs[i].classList.remove('active'); }
+      byId(t).classList.add('active');
+    }
+    for(var i=0;i<btns.length;i++){
+      (function(b){
+        b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
+      })(btns[i]);
+    }
+  }
+
+  /* ---------- Fleischner ---------- */
+  function fl_updateSolidComp(){
+    byId('fl_solidCompRow').style.display = (byId('fl_type').value==='partsolid')?'block':'none';
+  }
+
+  function fl_compute(){
+    var agegrp = byId('fl_agegrp').value;
+    var eligible = byId('fl_isEligible').value === 'yes';
+    var risk = byId('fl_risk').value;
+    var mult = byId('fl_multiplicity').value;
+    var type = byId('fl_type').value;
+    var sizecat = byId('fl_sizecat').value; // lt6, 6to8, gt8
+    var sccat = byId('fl_sccat').value; // lt6, ge6
+
+    if (agegrp === 'lt35' || !eligible){
+      byId('fl_result').textContent = 'Fleischner not applicable.\nReasons:\n- Age <35 or immunocompromised/known cancer.\nManagement:\nUse disease-specific or oncologic guideline.';
+      byId('fl_notes').innerHTML = '<div class="muted">Fleischner 2017 applies to incidentally detected nodules in adults &gt;35 years, immunocompetent, and without known cancer.</div>';
+      return;
+    }
+
+    var rec = '', bullets = [];
+
+    function singleSolid(){
+      if (sizecat === 'lt6'){
+        rec = (risk==='low') ? 'No routine follow-up.' : 'Optional CT at 12 months (consider if suspicious morphology, upper lobe location, or both).';
+        bullets.push('Single solid <6 mm.');
+        return;
+      }
+      if (sizecat === '6to8'){
+        rec = (risk==='high') ? 'CT at 6–12 months, then CT at 18–24 months.' : 'CT at 6–12 months, then consider CT at 18–24 months.';
+        bullets.push('Single solid 6–8 mm.');
+        return;
+      }
+      if (sizecat === 'gt8'){
+        rec = 'Consider CT at 3 months, PET/CT, or tissue sampling.';
+        bullets.push('Single solid >8 mm.');
+        return;
+      }
+    }
+
+    function multipleSolid(){
+      if (sizecat === 'lt6'){
+        rec = (risk==='low') ? 'No routine follow-up.' : 'Optional CT at 12 months.';
+        bullets.push('Multiple solid <6 mm (manage by most suspicious).');
+        return;
+      }
+      if (sizecat === '6to8'){
+        rec = (risk==='high') ? 'CT at 3–6 months, then at 18–24 months.' : 'CT at 3–6 months, then consider CT at 18–24 months.';
+        bullets.push('Multiple solid 6–8 mm (manage by most suspicious).');
+        return;
+      }
+      if (sizecat === 'gt8'){
+        rec = (risk==='high') ? 'CT at 3–6 months, then at 18–24 months.' : 'CT at 3–6 months, then consider CT at 18–24 months.';
+        bullets.push('Multiple solid >8 mm (manage by most suspicious).');
+        return;
+      }
+    }
+
+    function pureGGN(){
+      if (sizecat === 'lt6'){
+        rec = 'No routine follow-up.';
+        bullets.push('Pure GGN <6 mm.');
+        return;
+      }
+      rec = 'CT at 6–12 months to confirm persistence, then CT every 2 years until 5 years.';
+      bullets.push('Pure GGN ≥6 mm.');
+    }
+
+    function partSolid(){
+      if (sizecat === 'lt6'){
+        rec = 'No routine follow-up.';
+        bullets.push('Part‑solid total <6 mm.');
+        return;
+      }
+      if (sizecat !== 'lt6' && sccat === 'lt6'){
+        rec = 'CT at 3–6 months to confirm persistence. If unchanged and solid component remains <6 mm, annual CT should be performed for 5 years.';
+        bullets.push('Part‑solid ≥6 mm total, solid <6 mm.');
+        return;
+      }
+      if (sccat === 'ge6'){
+        rec = 'CT at 3-6 months to confirm persistence. Persistent part-solid nodules with solid components ≥6 mm should be considered highly suspicious.';
+        bullets.push('Part‑solid with solid ≥6 mm.');
+        return;
+      }
+    }
+
+    function multipleSubsolid(){
+      if (sizecat === 'lt6'){
+        rec = 'CT at 3–6 months. If stable, consider CT at 2 and 4 years.';
+        bullets.push('Multiple subsolid <6 mm.');
+      } else {
+        rec = 'CT at 3–6 months. Subsequent management based on the most suspicious nodule(s).';
+        bullets.push('Multiple subsolid ≥6 mm.');
+      }
+    }
+
+    if (type === 'solid' && !(typeof juxtaHandled !== 'undefined' && juxtaHandled)) {
+      if (mult === 'single') singleSolid(); else multipleSolid();
+    } else if (type === 'nonsolid'){
+      if (mult === 'single') pureGGN(); else multipleSubsolid();
+    } else if (type === 'partsolid'){
+      if (mult === 'single') partSolid(); else multipleSubsolid();
+    }
+
+    var txt = 'Recommendation: ' + rec + '\nReasons:\n- ' + bullets.join('\n- ');
+    byId('fl_result').textContent = txt;
+    byId('fl_notes').innerHTML = '<div class="muted">Notes: Low vs high risk considers smoking, spiculation, upper lobe location, emphysema/fibrosis, age, family history. For multiple nodules, manage by the most suspicious nodule.</div>';
+  }
+
+  /* ---------- Lung-RADS ---------- */
+  function _showErr(msg){
+    try{ var bar=document.getElementById('errbar'); bar.textContent=msg; bar.style.display='block'; }catch(_e){}
+  }
+  function safeRun(name, fn){
+    try { fn(); }
+    catch(e){
+      var m = 'Error in '+name+': ' + (e && e.message ? e.message : String(e));
+      if (e && e.stack) { m += ' \n' + e.stack; }
+      _showErr(m);
+    }
+  }
+
+  function lr_diag(){
+    var ids = [
+      'lr_examSituation','lr_extraSuspicious','lr_mode',
+      'lr_behavior_solid','lr_size_solid_cat',
+      'lr_behavior_part','lr_size_part_cat','lr_solidComp_part_cat',
+      'lr_behavior_ns','lr_size_ns_cat',
+      'lr_behavior_juxta','lr_size_juxta_cat'
+    ];
+    var missing = [];
+    for (var i=0;i<ids.length;i++){
+      if (!byId(ids[i])) missing.push(ids[i]);
+    }
+    var msg = missing.length? ('Missing elements: '+missing.join(', ')) : 'OK: all expected inputs present';
+    try{ document.getElementById('errbar').textContent = 'Diag → ' + msg; document.getElementById('errbar').style.display='block'; }catch(e){}
+    return msg;
+  }
+
+  function showMode(){
+    var m = byId('lr_mode').value;
+    var ids = ['mode_solid','mode_partsolid','mode_nonsolid','mode_juxta','mode_airway','mode_cyst','mode_benign','mode_none'];
+    for (var i=0;i<ids.length;i++){ byId(ids[i]).style.display = (ids[i]==='mode_'+m)?'block':'none'; }
+    if(m==='partsolid'){ togglePartSolidSC(); }
+    if(m==='partsolid'){ ensurePartListeners(); setTimeout(togglePartSolidSC, 0); }
+  }
+
+  function lr_compute(){
+    // Preflight presence checks per mode to catch any missing elements
+    var _mdEl = byId('lr_mode'); var _mdVal = _mdEl ? _mdEl.value : 'solid';
+    var missing = [];
+    function need(id){ if(!byId(id)) missing.push(id); }
+    if (_mdVal==='solid' || _mdVal==='juxta'){
+      need('lr_behavior_solid'); need(_mdVal==='solid'?'lr_size_solid_cat':'lr_size_juxta_cat');
+    } else if (_mdVal==='partsolid'){
+      need('lr_behavior_part'); need('lr_size_part_cat'); need('lr_solidComp_part_cat');
+    } else if (_mdVal==='nonsolid'){
+      need('lr_behavior_ns'); need('lr_size_ns_cat');
+    } else if (_mdVal==='airway'){
+      need('lr_airway_mode');
+    } else if (_mdVal==='cyst'){
+      need('lr_cyst_mode');
+    }
+    if (missing.length){
+      _showErr('Missing required element(s): '+missing.join(', '));
+      return;
+    }
+    var _es = byId('lr_examSituation'); var situation = _es? _es.value : 'routine';
+    var _ex = byId('lr_extraSuspicious'); var extra = _ex? _ex.value : 'none'; // none, spiculation, lad, mets, ggn_double
+    var _md = byId('lr_mode'); var mode = _md? _md.value : 'solid'; // solid, partsolid, nonsolid, juxta, airway, cyst, benign, none
+
+    var cat=null, reason=[], management='';
+    var lrMgmt = {
+      "0_prior": "Comparison to prior chest CT; additional lung cancer screening CT imaging needed.",
+      "0_infect": "1–3 month LDCT (indeterminate infectious/inflammatory process).",
+      "1": "12-month screening LDCT.",
+      "2": "12-month screening LDCT.",
+      "3": "6-month LDCT.",
+      "4A": "3-month LDCT; PET/CT may be considered if there is a ≥ 8 mm solid nodule or solid component.",
+      "4B": "Referral for further clinical evaluation. Diagnostic chest CT (± IV contrast); PET/CT may be considered if there is a ≥ 8 mm solid nodule or solid component; tissue sampling and/or surgical evaluation as appropriate.",
+      "4X": "Manage as 4B with attention to additional high-risk features (spiculation, lymphadenopathy, frank metastasis)."
+    };
+
+    if (situation === 'awaiting_prior'){ cat='0'; management=lrMgmt["0_prior"]; reason.push("Prior chest CT being located."); }
+    else if (situation === 'suspected_infectious'){ cat='0'; management=lrMgmt["0_infect"]; reason.push("Indeterminate infectious/inflammatory process."); }
+
+    if (!cat){
+      if (mode === 'none'){
+        cat='1'; management=lrMgmt["1"]; reason.push("No lung nodules present → 1.");
+      } else if (mode === 'benign'){
+        cat='2'; management=lrMgmt["2"]; reason.push("Benign calcified/fat-containing or typical benign morphology → 2.");
+      } else if (mode === 'airway'){
+        var airwaySel = byId('lr_airway_mode').value;
+        if (airwaySel === 'subsegmental'){ cat='2'; management=lrMgmt["2"]; reason.push("Subsegmental/multiple tubular airway abnormality → 2."); }
+        else if (airwaySel === 'segmental_baseline'){ cat='4A'; management=lrMgmt["4A"]; reason.push("Segmental/proximal airway nodule at baseline → 4A."); }
+        else if (airwaySel === 'segmental_persistent'){ cat='4B'; management=lrMgmt["4B"]; reason.push("Segmental/proximal airway nodule persistent at 3‑mo FU → 4B."); }
+      } else if (mode === 'cyst'){
+        var cystSel = byId('lr_cyst_mode').value;
+        if (cystSel === '3_growing_cystic'){ cat='3'; management=lrMgmt["3"]; reason.push("Atypical pulmonary cyst with growing cystic component → 3."); }
+        if (cystSel === '4a_thick_or_multiloc'){ cat='4A'; management=lrMgmt["4A"]; reason.push("Thick‑walled or multilocular cyst at baseline → 4A."); }
+        if (cystSel === '4b_progression'){ cat='4B'; management=lrMgmt["4B"]; reason.push("Progressive thick wall/nodularity/loculation/opacities → 4B."); }
+      } else {
+        var type = (mode==='solid'?'solid': (mode==='partsolid'?'partsolid': (mode==='nonsolid'?'nonsolid':'solid')));
+        var behavior, size, sc=0;
+        // Map dropdown categories to numeric upper bounds for threshold logic
+        function catToUpper(cat){
+          if (cat==='lt4') return 3.9;
+          if (cat==='4to5_9') return 5.9;
+          if (cat==='6to7_9') return 7.9;
+          if (cat==='8to9_9') return 9.9;
+          if (cat==='10to14_9') return 14.9;
+          if (cat==='15to29_9') return 29.9;
+          if (cat==='ge30') return 999;
+          return 0;
+        }
+        function scCatToUpper(cat){
+          if (cat==='lt4') return 3.9;
+          if (cat==='4to5_9') return 5.9;
+          if (cat==='6to7_9') return 7.9;
+          if (cat==='ge8') return 999;
+          return 0;
+        }
+        if (mode==='solid' || mode==='juxta'){
+        // Normalize juxta behavior to allowed set (baseline/new) just in case
+        if (mode==='juxta'){
+          var _bj = byId('lr_behavior_juxta'); 
+          if (_bj && _bj.value !== 'baseline' && _bj.value !== 'new'){ _bj.value = 'baseline'; }
+        }
+          var _bs = byId('lr_behavior_solid'); behavior = _bs? _bs.value : 'baseline';
+          size = catToUpper(byId(mode==='solid'?'lr_size_solid_cat':'lr_size_juxta_cat').value);
+        
+          // Juxtapleural benign morphology special case: <10 mm + benign → category 2
+          var juxtaHandled = false;
+          if (mode==='juxta'){
+            var jbEl = byId('lr_juxta_benign');
+            var jb = jbEl ? jbEl.value : 'no';
+            if (size < 10 && jb === 'yes'){
+              cat='2'; management=lrMgmt["2"]; reason.push("Juxtapleural benign morphology <10 mm → 2.");
+              juxtaHandled = true;
+            }
+          }
+    } else if (mode==='partsolid'){
+          var _bp = byId('lr_behavior_part'); behavior = _bp? _bp.value : 'baseline';
+          size = catToUpper(byId('lr_size_part_cat').value);
+          sc = scCatToUpper(byId('lr_solidComp_part_cat').value);
+        } else if (mode==='nonsolid'){
+          var _bn = byId('lr_behavior_ns'); behavior = _bn? _bn.value : 'baseline';
+          size = catToUpper(byId('lr_size_ns_cat').value);
+        }
+
+        if (type === 'solid' && !(typeof juxtaHandled !== 'undefined' && juxtaHandled)) {
+          if (behavior === 'baseline'){
+            if (size < 6){ cat='2'; management=lrMgmt["2"]; reason.push("Solid <6 mm at baseline → 2."); }
+            else if (size < 8){ cat='3'; management=lrMgmt["3"]; reason.push("Solid ≥6 to <8 mm at baseline → 3."); }
+            else if (size < 15){ cat='4A'; management=lrMgmt["4A"]; reason.push("Solid ≥8 to <15 mm at baseline → 4A."); }
+            else { cat='4B'; management=lrMgmt["4B"]; reason.push("Solid ≥15 mm at baseline → 4B."); }
+          } else if (behavior === 'new'){
+            if (size < 4){ cat='2'; management=lrMgmt["2"]; reason.push("New solid <4 mm → 2."); }
+            else if (size < 6){ cat='3'; management=lrMgmt["3"]; reason.push("New solid 4 to <6 mm → 3."); }
+            else if (size < 8){ cat='4A'; management=lrMgmt["4A"]; reason.push("New solid 6 to <8 mm → 4A."); }
+            else { cat='4B'; management=lrMgmt["4B"]; reason.push("New solid ≥8 mm → 4B."); }
+          } else if (behavior === 'growing'){
+            if (size < 8){ cat='4A'; management=lrMgmt["4A"]; reason.push("Growing solid <8 mm → 4A."); }
+            else { cat='4B'; management=lrMgmt["4B"]; reason.push("Growing solid ≥8 mm → 4B."); }
+          } else if (behavior === 'stable'){
+            if (size < 6){ cat='2'; management=lrMgmt["2"]; reason.push("Stable solid <6 mm → 2."); }
+            else if (size < 8){ cat='3'; management=lrMgmt["3"]; reason.push("Stable solid 6 to <8 mm → 3."); }
+            else if (size < 15){ cat='4A'; management=lrMgmt["4A"]; reason.push("Stable solid ≥8 to <15 mm → 4A."); }
+            else { cat='4B'; management=lrMgmt["4B"]; reason.push("Stable solid ≥15 mm → 4B."); }
+          } else if (behavior === 'slow_multi'){
+            cat='4B'; management=lrMgmt["4B"]; reason.push("Slow-growing solid over multiple exams (<1.5 mm/12 mo each) → 4B.");
+          }
+        }
+
+        if (!cat && type === 'partsolid'){
+        if (behavior === 'baseline') {
+          if (size < 6) { cat='2'; management=lrMgmt["2"]; reason.push("Part‑solid total <6 mm at baseline → 2."); }
+          else {
+            if (sc < 6) { cat='3'; management=lrMgmt["3"]; reason.push("Part‑solid ≥6 mm total with solid <6 mm → 3."); }
+            else if (sc < 8) { cat='4A'; management=lrMgmt["4A"]; reason.push("Part‑solid with solid ≥6 to <8 mm → 4A."); }
+            else { cat='4B'; management=lrMgmt["4B"]; reason.push("Part‑solid with solid ≥8 mm → 4B."); }
+          }
+        } else if (behavior === 'new_nodule' || behavior === 'new') {
+          if (size < 6) { cat='3'; management=lrMgmt["3"]; reason.push("New part‑solid nodule <6 mm total → 3."); }
+          else {
+            if (sc < 4) { cat='4A'; management=lrMgmt["4A"]; reason.push("New/growing solid component <4 mm → 4A."); }
+            else { cat='4B'; management=lrMgmt["4B"]; reason.push("New/growing solid component ≥4 mm → 4B."); }
+          }
+        } else if (behavior === 'new_solid') {
+          if (sc < 4) { cat='4A'; management=lrMgmt["4A"]; reason.push("New or growing solid component in existing nodule <4 mm → 4A."); }
+          else { cat='4B'; management=lrMgmt["4B"]; reason.push("New or growing solid component in existing nodule ≥4 mm → 4B."); }
+        } else if (behavior === 'growing' || behavior === 'growing_solid') {
+          if (sc < 8) { cat='4A'; management=lrMgmt["4A"]; reason.push("Growing part‑solid with solid <8 mm → 4A."); }
+          else { cat='4B'; management=lrMgmt["4B"]; reason.push("Growing part‑solid with solid ≥8 mm → 4B."); }
+        }
+    }
+
+        if (!cat && type === 'nonsolid'){
+          if (behavior === 'baseline' || behavior === 'new'){
+            if (size < 30){ cat='2'; management=lrMgmt["2"]; reason.push("Non‑solid (GGN) <30 mm (baseline/new/stable) → 2."); }
+            else { cat='3'; management=lrMgmt["3"]; reason.push("Non‑solid (GGN) ≥30 mm baseline/new → 3."); }
+          }
+          if (behavior === 'stable'){
+            // Non‑solid (GGN) stable/decreased → 2 regardless of size
+            cat='2'; management=lrMgmt["2"]; reason.push("Non‑solid (GGN) stable/decreased → 2.");
+          }
+
+          if (behavior === 'growing'){
+            if (size < 30){ cat='2'; management=lrMgmt["2"]; reason.push("Non‑solid with growth but <30 mm → 2 until meets other criteria."); }
+            else { cat='3'; management=lrMgmt["3"]; reason.push("Non‑solid ≥30 mm with growth → 3."); }
+          }
+          if (behavior === 'slow_multi'){
+            cat='2'; management=lrMgmt["2"]; reason.push("Slow‑growing pure GGN over multiple exams → 2 until meets other criteria.");
+          }
+        }
+      }
+    }
+
+    // 4X override
+    if (cat && (cat==='3' || cat==='4A' || cat==='4B') && extra!=='none'){
+      cat='4X'; management=lrMgmt["4X"]; reason.push("Additional suspicious feature present → upgrade to 4X.");
+    }
+
+    if (!cat){ cat="Unable to categorize"; management="Check inputs."; }
+    byId('lr_result').textContent = 'Category: ' + cat + '\nReasons:\n- ' + reason.join('\n- ') + '\nManagement:\n' + management;
+    byId('lr_notes').innerHTML = '<div class="muted">Notes: Short-interval FU downgrades may apply per Lung-RADS v2022. “Growing” = &gt;1.5 mm/12 mo.</div>';
+  }
+
+  /* ---------- QA (Fleischner) ---------- */
+  function runFlTest(cfg){
+    var btns=document.querySelectorAll('.tabbar button');
+    for(var i=0;i<btns.length;i++){ if(btns[i].getAttribute('data-tab')==='fleischner'){ btns[i].click(); break; } }
+    byId('fl_isEligible').value = cfg.eligible || 'yes';
+    byId('fl_agegrp').value = cfg.agegrp || 'ge35';
+    byId('fl_risk').value = cfg.risk || 'low';
+    byId('fl_multiplicity').value = cfg.mult || 'single';
+    byId('fl_type').value = cfg.type || 'solid';
+    var sz = (typeof cfg.size!=='undefined')? cfg.size : 6;
+    var scv = (typeof cfg.sc!=='undefined')? cfg.sc : 0;
+    byId('fl_sizecat').value = (sz < 6) ? 'lt6' : ((sz <= 8) ? '6to8' : 'gt8');
+    byId('fl_sccat').value = (scv < 6) ? 'lt6' : 'ge6';
+    fl_updateSolidComp();
+    fl_compute();
+    var got = byId('fl_result').textContent || '';
+    var pass = got.indexOf(cfg.expect) !== -1;
+    var status = pass ? '✅ PASS' : '❌ FAIL';
+    byId('qa_status').textContent = status + ' — ' + (pass ? 'expected phrase present' : 'expected phrase NOT present');
+    byId('fl_result').scrollIntoView(true);
+  }
+
+  function buildQA(){
+    var qaItems = [
+      {title:'solid, single, low risk, 5 mm', c:{type:'solid',mult:'single',risk:'low',size:5}, expect:'No routine follow-up.'},
+      {title:'solid, single, low risk, 6 mm', c:{type:'solid',mult:'single',risk:'low',size:6}, expect:'CT at 6–12 months, then consider CT at 18–24 months.'},
+      {title:'solid, single, low risk, 9 mm', c:{type:'solid',mult:'single',risk:'low',size:9}, expect:'Consider CT at 3 months, PET/CT, or tissue sampling.'},
+      {title:'solid, single, high risk, 5 mm', c:{type:'solid',mult:'single',risk:'high',size:5}, expect:'Optional CT at 12 months (consider if suspicious morphology, upper lobe location, or both).'},
+      {title:'solid, single, high risk, 6 mm', c:{type:'solid',mult:'single',risk:'high',size:6}, expect:'CT at 6–12 months, then CT at 18–24 months.'},
+      {title:'solid, single, high risk, 9 mm', c:{type:'solid',mult:'single',risk:'high',size:9}, expect:'Consider CT at 3 months, PET/CT, or tissue sampling.'},
+      {title:'solid, multiple, low risk, 5 mm', c:{type:'solid',mult:'multiple',risk:'low',size:5}, expect:'No routine follow-up.'},
+      {title:'solid, multiple, low risk, 6 mm', c:{type:'solid',mult:'multiple',risk:'low',size:6}, expect:'CT at 3–6 months, then consider CT at 18–24 months.'},
+      {title:'solid, multiple, low risk, 9 mm', c:{type:'solid',mult:'multiple',risk:'low',size:9}, expect:'CT at 3–6 months, then consider CT at 18–24 months.'},
+      {title:'solid, multiple, high risk, 5 mm', c:{type:'solid',mult:'multiple',risk:'high',size:5}, expect:'Optional CT at 12 months.'},
+      {title:'solid, multiple, high risk, 6 mm', c:{type:'solid',mult:'multiple',risk:'high',size:6}, expect:'CT at 3–6 months, then at 18–24 months.'},
+      {title:'solid, multiple, high risk, 9 mm', c:{type:'solid',mult:'multiple',risk:'high',size:9}, expect:'CT at 3–6 months, then at 18–24 months.'},
+      {title:'ground glass, single, 5 mm', c:{type:'nonsolid',mult:'single',risk:'low',size:5}, expect:'No routine follow-up.'},
+      {title:'ground glass, single 6 mm with 3 mm solid component', c:{type:'partsolid',mult:'single',risk:'low',size:6,sc:3}, expect:'CT at 3–6 months to confirm persistence. If unchanged and solid component remains <6 mm, annual CT should be performed for 5 years.'},
+      {title:'part-solid, single, 5 mm', c:{type:'partsolid',mult:'single',risk:'low',size:5,sc:0}, expect:'No routine follow-up.'},
+      {title:'part-solid, single, 6 mm with 3 mm solid', c:{type:'partsolid',mult:'single',risk:'low',size:6,sc:3}, expect:'CT at 3–6 months to confirm persistence. If unchanged and solid component remains <6 mm, annual CT should be performed for 5 years.'},
+      {title:'ground glass, multiple, 5 mm', c:{type:'nonsolid',mult:'multiple',risk:'low',size:5}, expect:'CT at 3–6 months. If stable, consider CT at 2 and 4 years.'},
+      {title:'ground glass, multiple, 6 mm with 3 mm solid', c:{type:'partsolid',mult:'multiple',risk:'low',size:6,sc:3}, expect:'CT at 3–6 months. Subsequent management based on the most suspicious nodule(s).'},
+      {title:'part-solid, multiple, 5 mm', c:{type:'partsolid',mult:'multiple',risk:'low',size:5,sc:0}, expect:'CT at 3–6 months. If stable, consider CT at 2 and 4 years.'},
+      {title:'part-solid, multiple, 6 mm with 3 mm solid', c:{type:'partsolid',mult:'multiple',risk:'low',size:6,sc:3}, expect:'CT at 3–6 months. Subsequent management based on the most suspicious nodule(s).'}
+    ];
+
+    var grid = byId('qa_grid');
+    for(var i=0;i<qaItems.length;i++){
+      var item = qaItems[i];
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.style.padding = '10px';
+
+      var title = document.createElement('strong');
+      title.appendChild(document.createTextNode((i+1)+'. '+item.title));
+
+      var exp = document.createElement('div');
+      exp.className = 'muted';
+      exp.appendChild(document.createTextNode('Expect: “'+item.expect+'”'));
+
+      var btn = document.createElement('button');
+      btn.appendChild(document.createTextNode('Run test'));
+      (function(cfg, expect){
+        btn.addEventListener('click', function(){
+          cfg.expect = expect;
+          runFlTest(cfg);
+        });
+      })({agegrp:'ge35', eligible:'yes', type:item.c.type, mult:item.c.mult, risk:item.c.risk, size:item.c.size, sc:item.c.sc}, item.expect);
+
+      card.appendChild(title);
+      card.appendChild(exp);
+      card.appendChild(btn);
+      grid.appendChild(card);
+    }
+  }
+
+  
+  // Hide solid component for part-solid when Baseline + total mean <6 mm
+  function togglePartSolidSC(){
+  var behEl = document.getElementById('lr_behavior_part');
+  var sizeEl = document.getElementById('lr_size_part_cat');
+  var row = document.getElementById('lr_solidCompRow_part');
+  if(!row) return;
+  var beh = behEl && behEl.value ? behEl.value : 'baseline';
+  var sizeCat = sizeEl && sizeEl.value ? sizeEl.value : '6to7_9';
+  var isLt6 = (sizeCat === 'lt4' || sizeCat === '4to5_9');
+  var hide = ((beh === 'baseline' || beh === 'new_nodule') && isLt6);
+  row.style.display = hide ? 'none' : 'block';
+}
+
+
+  var _partListenersAttached = false;
+  function ensurePartListeners(){
+    if (_partListenersAttached) return;
+    var behEl = document.getElementById('lr_behavior_part');
+    var sizeEl = document.getElementById('lr_size_part_cat');
+    if (behEl) { behEl.addEventListener('change', togglePartSolidSC); behEl.addEventListener('input', togglePartSolidSC); }
+    if (sizeEl) { sizeEl.addEventListener('change', togglePartSolidSC); sizeEl.addEventListener('input', togglePartSolidSC); }
+    _partListenersAttached = true;
+  }
+
+
+  // Part-solid: hide Solid component when (Baseline or New) AND total mean < 6 mm
+  function togglePartSolidSC(){
+  var behEl = document.getElementById('lr_behavior_part');
+  var sizeEl = document.getElementById('lr_size_part_cat');
+  var row = document.getElementById('lr_solidCompRow_part');
+  if(!behEl || !sizeEl || !row) return;
+  var beh = behEl.value;
+  var sizeCat = sizeEl.value; // lt4, 4to5_9, 6to7_9, ...
+  var isLt6 = (sizeCat === 'lt4' || sizeCat === '4to5_9');
+  // Hide only if Baseline OR New nodule AND size < 6 mm
+  row.style.display = ((beh === 'baseline' || beh === 'new_nodule') && isLt6) ? 'none' : 'block';
+}
+
+
+// ---- Cyst chips wiring (Option C) ----
+
+
+function setupCystChips(){
+  var morph = byId('cyst_morph'), status = byId('cyst_status'),
+      detailsWrap = byId('cyst_prog_details'), details = byId('cyst_progchips'),
+      hidden = byId('lr_cyst_mode');
+  if(!morph || !status || !hidden) return;
+
+  function setActive(group, val, exclusive){
+    if (exclusive === undefined) exclusive = true;
+    group.dataset.value = val;
+    var btns = group.querySelectorAll('.chip');
+    for (var i=0;i<btns.length;i++){
+      var btn = btns[i];
+      var isMe = (btn.getAttribute('data-val')===val);
+      if(exclusive){
+        btn.classList.toggle('active', isMe);
+      }
+    }
+  }
+
+  function toggleDetail(btn){
+    btn.classList.toggle('active');
+  }
+
+  function recomputeHidden(){
+    var m = morph.dataset.value || 'thin';
+    var s = status.dataset.value || 'baseline';
+    if(s==='growing_cystic'){
+      hidden.value = '3_growing_cystic';
+      detailsWrap.style.display = 'none';
+    }else if(s==='progression'){
+      detailsWrap.style.display = 'block';
+      // Determine if special 4A applies: becomes_multiloc with thin or thick morphology
+      var dwrap = byId('cyst_progchips'), special4A = false;
+      if(dwrap){
+        var active = [];
+        var chips = dwrap.querySelectorAll('.chip.active');
+        for (var i=0;i<chips.length;i++){
+          active.push(chips[i].getAttribute('data-val'));
+        }
+        if (active.indexOf('becomes_multiloc') !== -1 && (m==='thin' || m==='thick')){
+          special4A = true;
+        }
+      }
+      hidden.value = special4A ? '4a_thick_or_multiloc' : '4b_progression';
+    }else{ // baseline
+      detailsWrap.style.display = 'none';
+      if(m==='thick' || m==='multiloc'){
+        hidden.value = '4a_thick_or_multiloc';
+      }else{
+        hidden.value = '2_thin_baseline';
+      }
+    }
+  }
+
+  morph.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    setActive(morph, btn.getAttribute('data-val'));
+    recomputeHidden();
+  });
+
+  status.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    setActive(status, btn.getAttribute('data-val'));
+    recomputeHidden();
+  });
+
+  if (details){
+    details.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      toggleDetail(btn);
+      recomputeHidden();
+    });
+  }
+
+  // Initialize defaults
+  setActive(morph, morph.dataset.value || 'thin');
+  setActive(status, status.dataset.value || 'baseline');
+  recomputeHidden();
+}
+
+function init(){
+    setupTabs();
+    
+    try{ setupCystChips(); }catch(e){}
+byId('fl_type').addEventListener('change', fl_updateSolidComp);
+    byId('fl_compute').addEventListener('click', fl_compute);
+    byId('fl_reset').addEventListener('click', function(){ location.reload(); });
+    fl_updateSolidComp();
+
+    byId('lr_compute').addEventListener('click', function(){ safeRun("lr_compute", lr_compute); });
+    byId('lr_reset').addEventListener('click', function(){ location.reload(); });
+    byId('lr_mode').addEventListener('change', showMode);
+    byId('lr_diag_btn').addEventListener('click', lr_diag);
+    showMode();
+    try{ setTimeout(togglePartSolidSC, 0); }catch(e){}
+    var _bp=document.getElementById('lr_behavior_part'); if(_bp){ _bp.addEventListener('change', togglePartSolidSC); }
+    var _sp=document.getElementById('lr_size_part_cat'); if(_sp){ _sp.addEventListener('change', togglePartSolidSC); }
+    togglePartSolidSC();
+    ensurePartListeners();
+    setTimeout(togglePartSolidSC, 0);
+
+    buildQA();
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
