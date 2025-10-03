@@ -47,6 +47,20 @@ a{color:#0d5bd7}
 .chip-muted{opacity:.85}
 .hidden-select{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}
 .small-muted{color:#666;font-size:.9rem}
+
+.badge-cat1{
+  display:inline-block;
+  padding:.15rem .45rem;
+  border-radius:.5rem;
+  background:#e6fff2;
+  color:#0a7a3b;
+  border:1px solid #b9efcf;
+  font-weight:600;
+}
+.radio-group { display:flex; gap: 1rem; margin-top: 0.25rem; flex-wrap: wrap; }
+.radio-group label { font-weight: 500; cursor: pointer; }
+.risk-box { background: #ffecec; border-radius: 10px; padding: 8px; margin-top: 6px; }
+.lr-find-box { background: #fff0f0; border-radius: 10px; padding: 8px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -65,26 +79,44 @@ a{color:#0d5bd7}
         <div>
           <h2>Patient / Context</h2>
           <div class="row">
-            <label>Immunocompetent &amp; no known cancer?</label>
-            <select id="fl_isEligible">
-              <option value="yes" selected>Yes (use Fleischner)</option>
-              <option value="no">No (Fleischner not applicable)</option>
-            </select>
+            
+<label>Immunocompetent &amp; no known cancer?</label>
+<div class="radio-group">
+  <label><input type="radio" name="fl_isEligible_radio" value="yes" checked> Yes (use Fleischner)</label>
+  <label><input type="radio" name="fl_isEligible_radio" value="no"> No (Fleischner not applicable)</label>
+</div>
+<select id="fl_isEligible" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+  <option value="yes" selected>Yes (use Fleischner)</option>
+  <option value="no">No (Fleischner not applicable)</option>
+</select>
+
           </div>
           <div class="row">
-            <label>Age</label>
-            <select id="fl_agegrp">
-              <option value="ge35" selected>&ge;35 years old</option>
-              <option value="lt35">&lt;35 years old</option>
-            </select>
+            
+<label>Age</label>
+<div class="radio-group">
+  <label><input type="radio" name="fl_agegrp_radio" value="lt35"> &lt;35 years old</label>
+  <label><input type="radio" name="fl_agegrp_radio" value="ge35" checked> ≥35 years old</label>
+</div>
+<select id="fl_agegrp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+  <option value="lt35">&lt;35 years old</option>
+  <option value="ge35" selected>≥35 years old</option>
+</select>
+
           </div>
-          <div class="row">
-            <label>Risk level</label>
-            <select id="fl_risk">
-              <option value="low">Low</option>
-              <option value="high">High (e.g., heavy smoker, spiculation, upper lobe, family hx)</option>
-            </select>
-          </div>
+          <div class="row risk-box"><div class="row">
+            
+<label>Risk level</label>
+<div class="radio-group">
+  <label><input type="radio" name="fl_risk_radio" value="low" checked> Low</label>
+  <label><input type="radio" name="fl_risk_radio" value="high"> High</label>
+</div>
+<select id="fl_risk" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+  <option value="low" selected>Low</option>
+  <option value="high">High</option>
+</select>
+
+          </div></div>
         </div>
 
         <div class="nodule-box">
@@ -171,7 +203,7 @@ a{color:#0d5bd7}
 
         <div>
           <h2>Finding type</h2>
-          <div class="row">
+          <div class="row lr-find-box">
             <label>Select one</label>
             <select id="lr_mode" onchange="try{showMode(); if(this.value==='partsolid') togglePartSolidSC();}catch(e){}">
               <option value="solid" selected>Solid nodule</option>
@@ -395,6 +427,17 @@ a{color:#0d5bd7}
 </div>
 
 <script>
+function setLrResult(cat){
+  var el = byId('lr_result');
+  if(!el) return;
+  if(String(cat) === '1'){
+    el.innerHTML = 'Category: <span class="badge-cat1">1</span>';
+  }else{
+    el.innerHTML = 'Category: ' + cat;
+  }
+}
+
+
 (function(){
   function err(msg){ try{var bar=document.getElementById('errbar'); bar.textContent=msg; bar.style.display='block';}catch(e){} }
   window.addEventListener('error', function(e){ err('Script error: ' + (e.message||'(unknown)')); });
@@ -611,7 +654,7 @@ a{color:#0d5bd7}
       if (mode === 'none'){
         cat='1'; management=lrMgmt["1"]; reason.push("No lung nodules present → 1.");
       } else if (mode === 'benign'){
-        cat='2'; management=lrMgmt["2"]; reason.push("Benign calcified/fat-containing or typical benign morphology → 2.");
+        cat='1'; management=lrMgmt["1"]; reason.push("Benign calcified/fat-containing or typical benign morphology → 1.");
       } else if (mode === 'airway'){
         var airwaySel = byId('lr_airway_mode').value;
         if (airwaySel === 'subsegmental'){ cat='2'; management=lrMgmt["2"]; reason.push("Subsegmental/multiple tubular airway abnormality → 2."); }
@@ -951,8 +994,92 @@ function setupCystChips(){
   recomputeHidden();
 }
 
+
+function setupFlImmunoRadios(){
+  var radios = document.querySelectorAll('input[name="fl_isEligible_radio"]');
+  var sel = byId('fl_isEligible');
+  if(!radios.length || !sel) return;
+
+  function syncFromRadio(){
+    var checked = document.querySelector('input[name="fl_isEligible_radio"]:checked');
+    if(!checked) return;
+    sel.value = checked.value;
+    try{
+      var ev = new Event('change', {bubbles:true});
+      sel.dispatchEvent(ev);
+    }catch(e){
+      // Fallback for older Safari
+      if (document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+    try{ if (typeof fl_compute === 'function') { fl_compute(); } }catch(e){}
+  }
+
+  radios.forEach(function(r){
+    r.addEventListener('change', syncFromRadio);
+  });
+
+  // initial sync + compute
+  syncFromRadio();
+}
+
+
+function setupFlAgeRiskRadios(){
+  function bind(radioName, selectId){
+    var radios = document.querySelectorAll('input[name="'+radioName+'"]');
+    var sel = byId(selectId);
+    if(!radios.length || !sel) return;
+    function sync(){
+      var checked = document.querySelector('input[name="'+radioName+'"]:checked');
+      if(!checked) return;
+      sel.value = checked.value;
+      try{
+        var ev = new Event('change', {bubbles:true});
+        sel.dispatchEvent(ev);
+      }catch(e){
+        if(document.createEvent){
+          var evt = document.createEvent('HTMLEvents');
+          evt.initEvent('change', true, false);
+          sel.dispatchEvent(evt);
+        }
+      }
+      try{ if(typeof fl_compute==='function'){ fl_compute(); } }catch(e){}
+    }
+    radios.forEach(function(r){ r.addEventListener('change', sync); });
+    // initial sync + compute
+    sync();
+  }
+  bind('fl_agegrp_radio','fl_agegrp');
+  bind('fl_risk_radio','fl_risk');
+}
+
 function init(){
     setupTabs();
+    
+    
+    
+    try{ setupFlAgeRiskRadios(); }catch(e){}
+// Auto-compute on key Fleischner changes (including Age & Risk)
+    try{
+      var el;
+      el = byId('fl_multiplicity'); if(el) el.addEventListener('change', fl_compute);
+      el = byId('fl_type'); if(el) el.addEventListener('change', function(){ fl_updateSolidComp(); fl_compute(); });
+      el = byId('fl_sizecat'); if(el) el.addEventListener('change', fl_compute);
+      el = byId('fl_agegrp'); if(el) el.addEventListener('change', function(){ fl_compute(); });
+      el = byId('fl_risk'); if(el) el.addEventListener('change', fl_compute);
+    }catch(e){}// Auto-compute on key Fleischner changes
+    try{
+      byId('fl_multiplicity').addEventListener('change', fl_compute);
+      var flt = byId('fl_type');
+      if(flt){
+        flt.addEventListener('change', function(){ fl_updateSolidComp(); fl_compute(); });
+      }
+      byId('fl_sizecat').addEventListener('change', fl_compute);
+    }catch(e){}
+try{ setupFlImmunoRadios(); }catch(e){}
     
     try{ setupCystChips(); }catch(e){}
 byId('fl_type').addEventListener('change', fl_updateSolidComp);
