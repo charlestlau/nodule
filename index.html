@@ -86,6 +86,20 @@ a{color:#0d5bd7}
 }
 </style>
 
+
+<style>
+/* Soft light-blue panel behind the entire right column of Lung-RADS detail inputs */
+#lungrads .grid > div:last-child {
+  background: #f5f9ff;
+  border-radius: 8px;
+  padding: 14px;
+}
+/* Ensure inner rows don't get extra background nesting effects */
+#lungrads .grid > div:last-child .row {
+  background: transparent;
+}
+</style>
+
 </head>
 <body>
 <div id="errbar"></div>
@@ -274,14 +288,20 @@ a{color:#0d5bd7}
           <div id="mode_solid" class="modebox">
             <div class="row">
               <label>Behavior on current exam</label>
-              <select id="lr_behavior_solid">
-                <option value="baseline" selected>Baseline (first detection)</option>
+              
+  <div class="chip-group" id="lr_behavior_solid_chips" data-select="lr_behavior_solid" data-value="baseline">
+    <button type="button" class="chip" data-val="baseline">Baseline</button>
+    <button type="button" class="chip" data-val="new">New</button>
+    <button type="button" class="chip" data-val="growing">Growing</button>
+    <button type="button" class="chip" data-val="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</button>
+  </div>
+  <select id="lr_behavior_solid" class="hidden-select">
+                <option value="baseline" selected>Baseline</option>
                 <option value="new">New</option>
-                <option value="growing">Growing (≥1.5 mm mean within 12 mo)</option>
+                <option value="growing">Growing</option>
                 <option value="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</option>
               </select>
-              <div class="muted">“Growing” = &gt; 1.5 mm mean diameter increase within 12 months.</div>
-            </div>
+</div>
             <div class="row">
   <label>Total mean diameter (mm)</label>
 
@@ -305,13 +325,20 @@ a{color:#0d5bd7}
 
           <div id="mode_partsolid" class="modebox" style="display:none">
             <div class="row">
-              <label>Behavior on current exam</label>
-              <select id="lr_behavior_part" onchange="try{togglePartSolidSC();}catch(e){}">
+  <label>Behavior on current exam</label>
+
+  <div class="chip-group" id="lr_behavior_part_chips" data-select="lr_behavior_part" data-value="baseline">
+    <button type="button" class="chip" data-val="baseline">Baseline</button><button type="button" class="chip" data-val="new_nodule">New nodule</button><button type="button" class="chip" data-val="new_solid">New or growing solid component in existing nodule</button>
+  </div>
+  <select id="lr_behavior_part" class="hidden-select">
+    
         <option value="baseline" selected>Baseline</option>
         <option value="new_nodule">New nodule</option>
         <option value="new_solid">New or growing solid component in existing nodule</option>
-      </select>
-            </div>
+      
+  </select>
+
+</div>
             <div class="row">
   <label>Total mean diameter (mm)</label>
 
@@ -352,15 +379,22 @@ a{color:#0d5bd7}
 
           <div id="mode_nonsolid" class="modebox" style="display:none">
             <div class="row">
-              <label>Behavior on current exam</label>
-              <select id="lr_behavior_ns">
-                <option value="baseline">Baseline (first detection)</option>
+  <label>Behavior on current exam</label>
+
+  <div class="chip-group" id="lr_behavior_ns_chips" data-select="lr_behavior_ns" data-value="baseline">
+    <button type="button" class="chip" data-val="baseline">Baseline</button><button type="button" class="chip" data-val="new">New</button><button type="button" class="chip" data-val=")</button><button type="button" class="chip" data-val="stable">Stable / decreased</button><button type="button" class="chip" data-val="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</button>
+  </div>
+  <select id="lr_behavior_ns" class="hidden-select">
+    
+                <option value="baseline">Baseline</option>
                 <option value="new">New</option>
-                <option value="growing">Growing (≥1.5 mm mean within 12 mo)</option>
+                <option value=")</option>
                 <option value="stable">Stable / decreased</option>
                 <option value="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</option>
-              </select>
-            </div>
+              
+  </select>
+
+</div>
             <div class="row">
   <label>Total mean diameter (mm)</label>
 
@@ -384,12 +418,19 @@ a{color:#0d5bd7}
 
           <div id="mode_juxta" class="modebox" style="display:none">
             <div class="row">
-              <label>Behavior on current exam</label>
-              <select id="lr_behavior_juxta">
-                <option value="baseline" selected>Baseline (first detection)</option>
+  <label>Behavior on current exam</label>
+
+  <div class="chip-group" id="lr_behavior_juxta_chips" data-select="lr_behavior_juxta" data-value="baseline">
+    <button type="button" class="chip" data-val="baseline">Baseline</button><button type="button" class="chip" data-val="new">New</button>
+  </div>
+  <select id="lr_behavior_juxta" class="hidden-select">
+    
+                <option value="baseline" selected>Baseline</option>
                 <option value="new">New</option>
-              </select>
-            </div>
+              
+  </select>
+
+</div>
             <div class="row">
   <label>Total mean diameter (mm)</label>
 
@@ -424,13 +465,20 @@ a{color:#0d5bd7}
 
           <div id="mode_airway" class="modebox" style="display:none">
             <div class="row">
-              <label>Airway location</label>
-              <select id="lr_airway_mode">
+  <label>Location</label>
+
+  <div class="chip-group" id="airway_loc_chips" data-select="lr_airway_mode" data-value="subsegmental">
+    <button type="button" class="chip" data-val="subsegmental">Subsegmental / multiple tubular (no soft tissue nodule)</button><button type="button" class="chip" data-val="segmental_baseline">Segmental or more proximal — current exam</button><button type="button" class="chip" data-val="segmental_persistent">Segmental/proximal that persisted from 3‑mo FU</button>
+  </div>
+  <select id="lr_airway_mode" class="hidden-select">
+    
                 <option value="subsegmental">Subsegmental / multiple tubular (no soft tissue nodule)</option>
                 <option value="segmental_baseline">Segmental or more proximal — current exam</option>
                 <option value="segmental_persistent">Segmental/proximal that persisted from 3‑mo FU</option>
-              </select>
-            </div>
+              
+  </select>
+
+</div>
           </div>
 
           <div id="mode_cyst" class="modebox" style="display:none">
@@ -869,7 +917,7 @@ function setLrResult(cat){
 
     if (!cat){ cat="Unable to categorize"; management="Check inputs."; }
     byId('lr_result').textContent = 'Category: ' + cat + '\nReasons:\n- ' + reason.join('\n- ') + '\nManagement:\n' + management;
-    byId('lr_notes').innerHTML = '<div class="muted">Notes: Short-interval FU downgrades may apply per Lung-RADS v2022. “Growing” = &gt;1.5 mm/12 mo.</div>';
+    byId('lr_notes').innerHTML = '<div class="muted">Notes: Short-interval FU downgrades may apply per Lung-RADS v2022.</div>';
   }
 
   /* ---------- QA (Fleischner) ---------- */
@@ -1746,6 +1794,270 @@ document.addEventListener('DOMContentLoaded', function(){
     // (No-op here; existing compute likely checks .active on chips)
   });
 });
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initAirwayLocChips(){
+    var group = document.getElementById('airway_loc_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){ sel.value = val; }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value or first option
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initJuxtaBehaviorChips(){
+    var group = document.getElementById('lr_behavior_juxta_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value or first option
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initNSBehaviorChips(){
+    var group = document.getElementById('lr_behavior_ns_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value or first option
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{ el.dispatchEvent(new Event('change', {bubbles:true})); }
+    catch(e){
+      if(document.createEvent){ var evt=document.createEvent('HTMLEvents'); evt.initEvent('change', true, false); el.dispatchEvent(evt); }
+    }
+  }
+  (function initPSBehaviorChips(){
+    var group = document.getElementById('lr_behavior_part_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){ sel.value = val; }
+      dispatchChange(sel);
+      // Ensure the Part-solid SC visibility logic is refreshed
+      if (typeof togglePartSolidSC === 'function'){ try{ togglePartSolidSC(); }catch(_e){} }
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // Initialize
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{ el.dispatchEvent(new Event('change', {bubbles:true})); }
+    catch(e){
+      if(document.createEvent){ var evt=document.createEvent('HTMLEvents'); evt.initEvent('change', true, false); el.dispatchEvent(evt); }
+    }
+  }
+  (function initSolidBehaviorChips(){
+    var group = document.getElementById('lr_behavior_solid_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){ sel.value = val; }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // Initialize from select value or first option
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+(function(){
+  if (!window._origSetLrResult) {
+    window._origSetLrResult = window.setLrResult;
+    window.setLrResult = function(cat){
+      try{
+        var modeEl = document.getElementById('lr_mode');
+        var mode = modeEl ? modeEl.value : 'solid';
+        if (mode === 'solid') {
+          var behEl = document.getElementById('lr_behavior_solid');
+          var sizeEl = document.getElementById('lr_size_solid_cat');
+          var beh = behEl ? behEl.value : 'baseline';
+          var size = sizeEl ? sizeEl.value : '';
+          var ge8 = (size === '8to9_9' || size === '10to14_9' || size === '15to29_9' || size === 'ge30');
+          if (String(cat).toUpperCase() !== '4X') {
+            if (beh === 'growing') {
+              cat = ge8 ? '4B' : '4A';
+            } else if (beh === 'slow_multi') {
+              cat = '4B';
+            }
+          }
+        }
+      }catch(e){ /* no-op */ }
+      return window._origSetLrResult(cat);
+    };
+  }
+})();
 </script>
 
 </body>
