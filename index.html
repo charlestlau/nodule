@@ -61,7 +61,31 @@ a{color:#0d5bd7}
 .radio-group label { font-weight: 500; cursor: pointer; }
 .risk-box { background: #ffecec; border-radius: 10px; padding: 8px; margin-top: 6px; }
 .lr-find-box { background: #fff0f0; border-radius: 10px; padding: 8px; margin-top: 6px; }
+.sep{border-top:1px solid #e5e7eb;margin:8px 0}
+.row + .row{border-top:1px solid #eef2f7;padding-top:6px;margin-top:6px}
 </style>
+
+<style>
+#fl_risk_chips .chip.active {
+  background-color: #c0392b !important; /* red */
+  color: white !important;
+  border-color: #a93226 !important;
+}
+.sep{border-top:1px solid #e5e7eb;margin:8px 0}
+.row + .row{border-top:1px solid #eef2f7;padding-top:6px;margin-top:6px}
+</style>
+
+<style>#errbar{display:none !important;}</style>
+
+<style>
+/* Light gray background for 'Additional suspicious features' input area */
+.lr-additional-box {
+  background-color: #f5f5f5;
+  padding: 10px 12px;
+  border-radius: 6px;
+}
+</style>
+
 </head>
 <body>
 <div id="errbar"></div>
@@ -80,14 +104,15 @@ a{color:#0d5bd7}
           <h2>Patient / Context</h2>
           <div class="row">
             
+
 <label>Immunocompetent &amp; no known cancer?</label>
 <div class="radio-group">
-  <label><input type="radio" name="fl_isEligible_radio" value="yes" checked> Yes (use Fleischner)</label>
-  <label><input type="radio" name="fl_isEligible_radio" value="no"> No (Fleischner not applicable)</label>
+  <label><input type="radio" name="fl_isEligible_radio" value="yes" checked> Yes</label>
+  <label><input type="radio" name="fl_isEligible_radio" value="no"> No</label>
 </div>
 <select id="fl_isEligible" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-  <option value="yes" selected>Yes (use Fleischner)</option>
-  <option value="no">No (Fleischner not applicable)</option>
+  <option value="yes" selected>Yes</option>
+  <option value="no">No</option>
 </select>
 
           </div>
@@ -104,59 +129,89 @@ a{color:#0d5bd7}
 </select>
 
           </div>
-          <div class="row risk-box"><div class="row">
-            
-<label>Risk level</label>
-<div class="radio-group">
-  <label><input type="radio" name="fl_risk_radio" value="low" checked> Low</label>
-  <label><input type="radio" name="fl_risk_radio" value="high"> High</label>
+          
+<div class="row">
+  <label>Risk level</label>
+  <div class="chip-group" id="fl_risk_chips" data-value="low">
+    <button type="button" class="chip active" data-val="low">Low</button>
+    <button type="button" class="chip" data-val="high">High</button>
+  </div>
+  <!-- Hidden select kept for logic compatibility -->
+  <select id="fl_risk" class="hidden-select">
+    <option value="low" selected>Low</option>
+    <option value="high">High</option>
+  </select>
 </div>
-<select id="fl_risk" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-  <option value="low" selected>Low</option>
-  <option value="high">High</option>
-</select>
 
-          </div></div>
         </div>
 
         <div class="nodule-box">
           <h2>Nodule</h2>
-          <div class="row">
-            <label>Single vs multiple nodules</label>
-            <select id="fl_multiplicity">
-              <option value="single">Single</option>
-              <option value="multiple">Multiple</option>
-            </select>
-          </div>
-          <div class="row">
-            <label>Type</label>
-            <select id="fl_type">
-              <option value="solid">Solid</option>
-              <option value="partsolid">Part‑solid</option>
-              <option value="nonsolid">Pure ground‑glass</option>
-            </select>
-          </div>
-          <div class="row">
-            <label>Total mean diameter</label>
-            <select id="fl_sizecat">
-              <option value="lt6">&lt;6 mm</option>
-              <option value="6to8" selected>6–8 mm</option>
-              <option value="gt8">&gt;8 mm</option>
-            </select>
-          </div>
-          <div class="row" id="fl_solidCompRow">
-            <label>Solid component — for part‑solid</label>
-            <select id="fl_sccat">
-              <option value="lt6" selected>&lt;6 mm</option>
-              <option value="ge6">&ge;6 mm</option>
-            </select>
-          </div>
+          
+<div class="row">
+  <label>Single vs multiple nodules</label>
+  <div class="chip-group" id="fl_multiplicity_chips" data-value="single">
+    <button type="button" class="chip active" data-val="single">Single</button>
+    <button type="button" class="chip" data-val="multiple">Multiple</button>
+  </div>
+  <select id="fl_multiplicity" class="hidden-select">
+    <option value="single" selected>Single</option>
+    <option value="multiple">Multiple</option>
+  </select>
+</div>
+
+          
+<div class="row">
+  <label>Type</label>
+  <div class="chip-group" id="fl_type_chips" data-value="solid">
+    <button type="button" class="chip active" data-val="solid">Solid</button>
+    <button type="button" class="chip" data-val="partsolid">Part‑solid</button>
+    <button type="button" class="chip" data-val="nonsolid">Pure ground‑glass</button>
+  </div>
+  <!-- Keep hidden select for existing logic -->
+  <select id="fl_type" class="hidden-select">
+    <option value="solid" selected>Solid</option>
+    <option value="partsolid">Part‑solid</option>
+    <option value="nonsolid">Pure ground‑glass</option>
+  </select>
+</div>
+
+          
+<div class="row">
+  <label>Total mean diameter</label>
+  <div class="chip-group" id="fl_sizecat_chips" data-value="6to8">
+    <button type="button" class="chip" data-val="lt6">&lt;6 mm</button>
+    <button type="button" class="chip active" data-val="6to8">6–8 mm</button>
+    <button type="button" class="chip" data-val="gt8">&gt;8 mm</button>
+  </div>
+  <!-- Keep hidden select for logic -->
+  <select id="fl_sizecat" class="hidden-select">
+    <option value="lt6">&lt;6 mm</option>
+    <option value="6to8" selected>6–8 mm</option>
+    <option value="gt8">&gt;8 mm</option>
+  </select>
+</div>
+
+          
+<div class="row" id="fl_solidCompRow">
+  <label>Solid component — for part‑solid</label>
+  <div class="chip-group" id="fl_sccat_chips" data-value="lt6">
+    <button type="button" class="chip active" data-val="lt6">&lt;6 mm</button>
+    <button type="button" class="chip" data-val="ge6">≥6 mm</button>
+  </div>
+  <!-- Keep hidden select for logic -->
+  <select id="fl_sccat" class="hidden-select">
+    <option value="lt6" selected>&lt;6 mm</option>
+    <option value="ge6">≥6 mm</option>
+  </select>
+</div>
+
         </div>
       </div>
       <div class="inline" style="margin-top:10px">
         <button id="fl_compute">Compute recommendation</button>
         <button class="secondary" id="fl_reset">Reset</button>
-        <div class="muted">Fleischner Society 2017 guidelines apply to incidentally detected nodules in adults &gt;35 years, immunocompetent, with no known cancer.</div>
+        <div class="muted"></div>
       </div>
     </div>
 
@@ -166,12 +221,7 @@ a{color:#0d5bd7}
       <div id="fl_notes" class="footer"></div>
     </div>
 
-    <details class="card" style="margin-top:12px">
-      <summary>QA: Fleischner quick‑tests (auto‑fill &amp; run)</summary>
-      <p class="muted">Prefills inputs, runs the calculator, and checks the output text for an expected phrase.</p>
-      <div id="qa_status" class="muted" style="margin:.3rem 0 .6rem"></div>
-      <div class="grid" id="qa_grid"></div>
-    </details>
+    
   </section>
 
   <!-- LUNG-RADS SECTION -->
@@ -188,23 +238,8 @@ a{color:#0d5bd7}
               <option value="suspected_infectious">Findings suggest infectious/inflammatory</option>
             </select>
           </div>
-          <div class="row">
-            <label>Additional suspicious features (4X)</label>
-            <select id="lr_extraSuspicious">
-              <option value="none" selected>None</option>
-              <option value="spiculation">Spiculation</option>
-              <option value="lad">Lymphadenopathy</option>
-              <option value="mets">Frank metastatic disease</option>
-              <option value="ggn_double">GGN doubles in size in 1 year</option>
-            </select>
-            <div class="muted">If any of these are present, any case that would otherwise be Lung-RADS 3, 4A, or 4B becomes 4X.</div>
-          </div>
-        </div>
-
-        <div>
-          <h2>Finding type</h2>
-          <div class="row lr-find-box">
-            <label>Select one</label>
+<div class="row lr-find-box">
+            <label>Select finding type</label>
             <select id="lr_mode" onchange="try{showMode(); if(this.value==='partsolid') togglePartSolidSC();}catch(e){}">
               <option value="solid" selected>Solid nodule</option>
               <option value="partsolid">Part solid nodule</option>
@@ -217,9 +252,26 @@ a{color:#0d5bd7}
             </select>
           </div>
 
+          <div class="row lr-additional-box">
+<label>Additional suspicious features</label>
+            <select id="lr_extraSuspicious">
+              <option value="none" selected>None</option>
+              <option value="spiculation">Spiculation</option>
+              <option value="lad">Lymphadenopathy</option>
+              <option value="mets">Frank metastatic disease</option>
+              <option value="ggn_double">GGN doubles in size in 1 year</option>
+            </select>
+            
+
+          </div>
+        </div>
+
+        <div>
+          <h2><span id="lr_find_heading">Finding type</span></h2>
+          
+
           <!-- Mode containers -->
           <div id="mode_solid" class="modebox">
-            <h2>Nodule (Solid)</h2>
             <div class="row">
               <label>Behavior on current exam</label>
               <select id="lr_behavior_solid">
@@ -231,8 +283,13 @@ a{color:#0d5bd7}
               <div class="muted">“Growing” = &gt; 1.5 mm mean diameter increase within 12 months.</div>
             </div>
             <div class="row">
-              <label>Total mean diameter (mm)</label>
-              <select id="lr_size_solid_cat">
+  <label>Total mean diameter (mm)</label>
+
+  <div class="chip-group size-chip-group" id="lr_size_solid_chips" data-select="lr_size_solid_cat" data-value="6to7_9">
+    <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
+  </div>
+  <select id="lr_size_solid_cat" class="hidden-select">
+    
   <option value="lt4">&lt;4.0 mm</option>
   <option value="4to5_9">4.0 to 5.9 mm</option>
   <option value="6to7_9" selected>6.0 to 7.9 mm</option>
@@ -240,12 +297,13 @@ a{color:#0d5bd7}
   <option value="10to14_9">10.0 to 14.9 mm</option>
   <option value="15to29_9">15.0 to 29.9 mm</option>
   <option value="ge30">&ge;30.0 mm</option>
-</select>
-            </div>
+
+  </select>
+
+</div>
           </div>
 
           <div id="mode_partsolid" class="modebox" style="display:none">
-            <h2>Nodule (Part solid)</h2>
             <div class="row">
               <label>Behavior on current exam</label>
               <select id="lr_behavior_part" onchange="try{togglePartSolidSC();}catch(e){}">
@@ -255,8 +313,13 @@ a{color:#0d5bd7}
       </select>
             </div>
             <div class="row">
-              <label>Total mean diameter (mm)</label>
-              <select id="lr_size_part_cat">
+  <label>Total mean diameter (mm)</label>
+
+  <div class="chip-group size-chip-group" id="lr_size_ps_chips" data-select="lr_size_part_cat" data-value="6to7_9">
+    <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
+  </div>
+  <select id="lr_size_part_cat" class="hidden-select">
+    
   <option value="lt4">&lt;4.0 mm</option>
   <option value="4to5_9">4.0 to 5.9 mm</option>
   <option value="6to7_9" selected>6.0 to 7.9 mm</option>
@@ -264,21 +327,30 @@ a{color:#0d5bd7}
   <option value="10to14_9">10.0 to 14.9 mm</option>
   <option value="15to29_9">15.0 to 29.9 mm</option>
   <option value="ge30">&ge;30.0 mm</option>
-</select>
-            </div>
+
+  </select>
+
+</div>
             <div class="row" id="lr_solidCompRow_part">
               <label>Solid component (mm)</label>
-              <select id="lr_solidComp_part_cat">
+              
+  <div class="chip-group" id="lr_sc_part_chips" data-select="lr_solidComp_part_cat" data-value="lt4">
+    <button type="button" class="chip" data-val="lt4">0.1 to 3.9 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="ge8">&ge;8.0 mm</button>
+  </div>
+  <!-- Keep the original select hidden for logic compatibility -->
+  <select id="lr_solidComp_part_cat" class="hidden-select">
+    
   <option value="lt4">0.1 to 3.9 mm</option>
   <option value="4to5_9">4.0 to 5.9 mm</option>
   <option value="6to7_9">6.0 to 7.9 mm</option>
   <option value="ge8">&ge;8.0 mm</option>
-</select>
+
+  </select>
+
             </div>
           </div>
 
           <div id="mode_nonsolid" class="modebox" style="display:none">
-            <h2>Nodule (Non solid / GGN)</h2>
             <div class="row">
               <label>Behavior on current exam</label>
               <select id="lr_behavior_ns">
@@ -290,8 +362,13 @@ a{color:#0d5bd7}
               </select>
             </div>
             <div class="row">
-              <label>Total mean diameter (mm)</label>
-              <select id="lr_size_ns_cat">
+  <label>Total mean diameter (mm)</label>
+
+  <div class="chip-group size-chip-group" id="lr_size_ns_chips" data-select="lr_size_ns_cat" data-value="6to7_9">
+    <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
+  </div>
+  <select id="lr_size_ns_cat" class="hidden-select">
+    
   <option value="lt4">&lt;4.0 mm</option>
   <option value="4to5_9">4.0 to 5.9 mm</option>
   <option value="6to7_9" selected>6.0 to 7.9 mm</option>
@@ -299,12 +376,13 @@ a{color:#0d5bd7}
   <option value="10to14_9">10.0 to 14.9 mm</option>
   <option value="15to29_9">15.0 to 29.9 mm</option>
   <option value="ge30">&ge;30.0 mm</option>
-</select>
-            </div>
+
+  </select>
+
+</div>
           </div>
 
           <div id="mode_juxta" class="modebox" style="display:none">
-            <h2>Juxtapleural nodule</h2>
             <div class="row">
               <label>Behavior on current exam</label>
               <select id="lr_behavior_juxta">
@@ -313,8 +391,13 @@ a{color:#0d5bd7}
               </select>
             </div>
             <div class="row">
-              <label>Total mean diameter (mm)</label>
-              <select id="lr_size_juxta_cat">
+  <label>Total mean diameter (mm)</label>
+
+  <div class="chip-group size-chip-group" id="lr_size_jp_chips" data-select="lr_size_juxta_cat" data-value="6to7_9">
+    <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
+  </div>
+  <select id="lr_size_juxta_cat" class="hidden-select">
+    
   <option value="lt4">&lt;4.0 mm</option>
   <option value="4to5_9">4.0 to 5.9 mm</option>
   <option value="6to7_9" selected>6.0 to 7.9 mm</option>
@@ -322,8 +405,10 @@ a{color:#0d5bd7}
   <option value="10to14_9">10.0 to 14.9 mm</option>
   <option value="15to29_9">15.0 to 29.9 mm</option>
   <option value="ge30">&ge;30.0 mm</option>
-</select>
-            </div>
+
+  </select>
+
+</div>
             <div class="row">
               <label>Benign-appearing juxtapleural morphology?</label>
               <select id="lr_juxta_benign">
@@ -338,7 +423,6 @@ a{color:#0d5bd7}
           </div>
 
           <div id="mode_airway" class="modebox" style="display:none">
-            <h2>Airway nodule</h2>
             <div class="row">
               <label>Airway location</label>
               <select id="lr_airway_mode">
@@ -350,7 +434,6 @@ a{color:#0d5bd7}
           </div>
 
           <div id="mode_cyst" class="modebox" style="display:none">
-            <h2>Atypical pulmonary cyst</h2>
             <div class="row">
               
 <label>Cyst subtype</label>
@@ -394,19 +477,17 @@ a{color:#0d5bd7}
           </div>
 
           <div id="mode_benign" class="modebox" style="display:none">
-            <h2>Nodule with benign features</h2>
             <div class="muted">Benign calcified or fat-containing nodule, typical perifissural, etc.</div>
           </div>
 
           <div id="mode_none" class="modebox" style="display:none">
-            <h2>No nodule</h2>
             <div class="muted">No lung nodules present.</div>
           </div>
         </div>
       </div>
       <div class="inline" style="margin-top:10px">
         <button id="lr_compute">Compute category</button>
-        <button class="secondary" id="lr_diag_btn" type="button">Diagnose UI</button>
+        
         <button class="secondary" id="lr_reset">Reset</button>
         <div class="muted">ACR Lung-RADS® v2022.</div>
       </div>
@@ -436,7 +517,6 @@ function setLrResult(cat){
     el.innerHTML = 'Category: ' + cat;
   }
 }
-
 
 (function(){
   function err(msg){ try{var bar=document.getElementById('errbar'); bar.textContent=msg; bar.style.display='block';}catch(e){} }
@@ -568,9 +648,9 @@ function setLrResult(cat){
       if (mult === 'single') partSolid(); else multipleSubsolid();
     }
 
-    var txt = 'Recommendation: ' + rec + '\nReasons:\n- ' + bullets.join('\n- ');
+    var txt = rec;
     byId('fl_result').textContent = txt;
-    byId('fl_notes').innerHTML = '<div class="muted">Notes: Low vs high risk considers smoking, spiculation, upper lobe location, emphysema/fibrosis, age, family history. For multiple nodules, manage by the most suspicious nodule.</div>';
+    byId('fl_notes').innerHTML = '<div class="muted"></div>';
   }
 
   /* ---------- Lung-RADS ---------- */
@@ -882,7 +962,6 @@ function setLrResult(cat){
   row.style.display = hide ? 'none' : 'block';
 }
 
-
   var _partListenersAttached = false;
   function ensurePartListeners(){
     if (_partListenersAttached) return;
@@ -892,7 +971,6 @@ function setLrResult(cat){
     if (sizeEl) { sizeEl.addEventListener('change', togglePartSolidSC); sizeEl.addEventListener('input', togglePartSolidSC); }
     _partListenersAttached = true;
   }
-
 
   // Part-solid: hide Solid component when (Baseline or New) AND total mean < 6 mm
   function togglePartSolidSC(){
@@ -907,9 +985,7 @@ function setLrResult(cat){
   row.style.display = ((beh === 'baseline' || beh === 'new_nodule') && isLt6) ? 'none' : 'block';
 }
 
-
 // ---- Cyst chips wiring (Option C) ----
-
 
 function setupCystChips(){
   var morph = byId('cyst_morph'), status = byId('cyst_status'),
@@ -994,7 +1070,6 @@ function setupCystChips(){
   recomputeHidden();
 }
 
-
 function setupFlImmunoRadios(){
   var radios = document.querySelectorAll('input[name="fl_isEligible_radio"]');
   var sel = byId('fl_isEligible');
@@ -1026,7 +1101,6 @@ function setupFlImmunoRadios(){
   syncFromRadio();
 }
 
-
 function setupFlAgeRiskRadios(){
   function bind(radioName, selectId){
     var radios = document.querySelectorAll('input[name="'+radioName+'"]');
@@ -1056,12 +1130,244 @@ function setupFlAgeRiskRadios(){
   bind('fl_risk_radio','fl_risk');
 }
 
+function setupFlMultiplicityChips(){
+  var group = byId('fl_multiplicity_chips');
+  var sel = byId('fl_multiplicity');
+  if(!group || !sel) return;
+
+  function setActive(val){
+    group.dataset.value = val;
+    var btns = group.querySelectorAll('.chip');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      var on = (b.getAttribute('data-val')===val);
+      b.classList.toggle('active', on);
+    }
+  }
+
+  function sync(val){
+    sel.value = val;
+    try{
+      var ev = new Event('change', {bubbles:true});
+      sel.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+    try{ if (typeof fl_compute==='function'){ fl_compute(); } }catch(e){}
+  }
+
+  group.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    var val = btn.getAttribute('data-val');
+    setActive(val);
+    sync(val);
+  });
+
+  // initial activation & sync
+  var def = group.getAttribute('data-value') || sel.value || 'single';
+  setActive(def);
+  sync(def);
+}
+
+function setupFlTypeChips(){
+  var group = byId('fl_type_chips');
+  var sel = byId('fl_type');
+  if(!group || !sel) return;
+
+  function setActive(val){
+    group.dataset.value = val;
+    var btns = group.querySelectorAll('.chip');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      var on = (b.getAttribute('data-val')===val);
+      b.classList.toggle('active', on);
+    }
+  }
+
+  function sync(val){
+    sel.value = val;
+    // trigger change so existing listeners run (updates solid-comp row + compute)
+    try{
+      var ev = new Event('change', {bubbles:true});
+      sel.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+    try{ if (typeof fl_updateSolidComp==='function'){ fl_updateSolidComp(); } }catch(e){}
+    try{ if (typeof fl_compute==='function'){ fl_compute(); } }catch(e){}
+  }
+
+  group.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    var val = btn.getAttribute('data-val');
+    setActive(val);
+    sync(val);
+  });
+
+  // Initial activation & sync (honor hidden select if changed elsewhere)
+  var def = sel.value || group.getAttribute('data-value') || 'solid';
+  setActive(def);
+  sync(def);
+}
+
+function setupFlSizeChips(){
+  var group = byId('fl_sizecat_chips');
+  var sel = byId('fl_sizecat');
+  if(!group || !sel) return;
+
+  function setActive(val){
+    group.dataset.value = val;
+    var btns = group.querySelectorAll('.chip');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      var on = (b.getAttribute('data-val')===val);
+      b.classList.toggle('active', on);
+    }
+  }
+
+  function sync(val){
+    sel.value = val;
+    try{
+      var ev = new Event('change', {bubbles:true});
+      sel.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+    try{ if (typeof fl_compute==='function'){ fl_compute(); } }catch(e){}
+  }
+
+  group.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    var val = btn.getAttribute('data-val');
+    setActive(val);
+    sync(val);
+  });
+
+  // initial activation & sync reflect hidden select's current value
+  var def = sel.value || group.getAttribute('data-value') || '6to8';
+  setActive(def);
+  sync(def);
+}
+
+function setupFlSolidCompChips(){
+  var group = byId('fl_sccat_chips');
+  var sel = byId('fl_sccat');
+  if(!group || !sel) return;
+
+  function setActive(val){
+    group.dataset.value = val;
+    var btns = group.querySelectorAll('.chip');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      var on = (b.getAttribute('data-val')===val);
+      b.classList.toggle('active', on);
+    }
+  }
+
+  function sync(val){
+    sel.value = val;
+    try{
+      var ev = new Event('change', {bubbles:true});
+      sel.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+    try{ if (typeof fl_compute==='function'){ fl_compute(); } }catch(e){}
+  }
+
+  group.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    var val = btn.getAttribute('data-val');
+    setActive(val);
+    sync(val);
+  });
+
+  // initial activation & sync reflect hidden select's current value
+  var def = sel.value || group.getAttribute('data-value') || 'lt6';
+  setActive(def);
+  sync(def);
+}
+
+function setupFlRiskChips(){
+  var group = byId('fl_risk_chips');
+  var sel = byId('fl_risk');
+  if(!group || !sel) return;
+
+  function setActive(val){
+    group.dataset.value = val;
+    var btns = group.querySelectorAll('.chip');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      var on = (b.getAttribute('data-val')===val);
+      b.classList.toggle('active', on);
+    }
+  }
+
+  function sync(val){
+    sel.value = val;
+    try{
+      var ev = new Event('change', {bubbles:true});
+      sel.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+    try{ if (typeof fl_compute==='function'){ fl_compute(); } }catch(e){}
+  }
+
+  group.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    var val = btn.getAttribute('data-val');
+    setActive(val);
+    sync(val);
+  });
+
+  // initial activation from hidden select value
+  var def = sel.value || group.getAttribute('data-value') || 'low';
+  setActive(def);
+  sync(def);
+}
+
 function init(){
     setupTabs();
     
     
     
-    try{ setupFlAgeRiskRadios(); }catch(e){}
+    
+    
+    
+    
+    
+    try{ setupFlRiskChips(); }catch(e){}
+try{ setupFlSolidCompChips(); }catch(e){}
+try{ setupFlSizeChips(); }catch(e){}
+try{ setupFlTypeChips(); }catch(e){}
+try{ setupFlMultiplicityChips(); }catch(e){}
+try{ setupFlAgeRiskRadios(); }catch(e){}
 // Auto-compute on key Fleischner changes (including Age & Risk)
     try{
       var el;
@@ -1109,5 +1415,338 @@ byId('fl_type').addEventListener('change', fl_updateSolidComp);
   }
 })();
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var target = document.getElementById('lr_result');
+  if (!target) return;
+
+  function stripReasons(){
+    var t = target.textContent || '';
+    if (t.indexOf('Reasons:') === -1) return;
+    var lines = t.split('\n');
+    var out = [];
+    for (var i=0; i<lines.length; i++){
+      var L = lines[i];
+      if (L.trim().startsWith('Reasons:')){
+        // skip "Reasons:" and subsequent bullet lines until the next header (e.g., "Management:")
+        i++;
+        while (i < lines.length){
+          var s = lines[i].trim();
+          if (s.startsWith('- ')) { i++; continue; }
+          if (s.length === 0) { i++; continue; }
+          // stop skipping once we reach the next non-bullet line
+          break;
+        }
+        // fall through to push the current non-bullet line at this index on next loop iteration
+      }
+      if (i < lines.length) out.push(lines[i]);
+    }
+    target.textContent = out.join('\n');
+  }
+
+  // Run once and whenever the result node changes
+  var obs = new MutationObserver(function(){ stripReasons(); });
+  obs.observe(target, { characterData: true, childList: true, subtree: true });
+  stripReasons();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var sel = document.getElementById('lr_mode');
+  var hdr = document.getElementById('lr_find_heading');
+  if (!sel || !hdr) return;
+  function updateHdr() {
+    var txt = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text.trim() : '';
+    hdr.textContent = txt || 'Finding type';
+  }
+  sel.addEventListener('change', updateHdr);
+  updateHdr();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initSolidSizeChips(){
+    var group = document.getElementById('lr_size_solid_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initNSSizeChips(){
+    var group = document.getElementById('lr_size_ns_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initJPSizeChips(){
+    var group = document.getElementById('lr_size_jp_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        sel.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initPSSizeChips(){
+    var group = document.getElementById('lr_size_ps_chips');
+    if(!group) return;
+    var sel = document.getElementById(group.getAttribute('data-select'));
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      // always fire downstream logic so show/hide of solid component stays in sync
+      try{
+        var ev = new Event('change', {bubbles:true});
+        sel.dispatchEvent(ev);
+      }catch(e){
+        if(document.createEvent){
+          var evt = document.createEvent('HTMLEvents');
+          evt.initEvent('change', true, false);
+          sel.dispatchEvent(evt);
+        }
+      }
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // initialize from select's current value
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function dispatchChange(el){
+    try{
+      var ev = new Event('change', {bubbles:true});
+      el.dispatchEvent(ev);
+    }catch(e){
+      if(document.createEvent){
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent('change', true, false);
+        el.dispatchEvent(evt);
+      }
+    }
+  }
+  (function initPartSolidSCChips(){
+    var group = document.getElementById('lr_sc_part_chips');
+    if(!group) return;
+    var selId = group.getAttribute('data-select');
+    var sel = document.getElementById(selId);
+    if(!sel) return;
+    var btns = group.querySelectorAll('.chip');
+    function setActive(val){
+      group.dataset.value = val || '';
+      for (var i=0;i<btns.length;i++){
+        var b = btns[i];
+        b.classList.toggle('active', b.getAttribute('data-val')===val);
+      }
+    }
+    function syncToSelect(val){
+      if (sel.value !== val){
+        sel.value = val;
+      }
+      // Always fire change so downstream logic updates category and any dependent UI
+      dispatchChange(sel);
+    }
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      setActive(val);
+      syncToSelect(val);
+    });
+    // Initialize from current select value or first chip
+    var initial = sel.value || (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].value : '');
+    if(!initial && btns.length){ initial = btns[0].getAttribute('data-val'); }
+    setActive(initial);
+    syncToSelect(initial);
+  })();
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var prog = document.getElementById('cyst_progchips');
+  if(!prog) return;
+  prog.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if(!btn) return;
+    // clear all actives in this group
+    var all = prog.querySelectorAll('.chip');
+    for (var i=0;i<all.length;i++){ all[i].classList.remove('active'); }
+    // activate the clicked one
+    btn.classList.add('active');
+    // If downstream logic reads selected states, trigger a change on a synthetic hidden input if present
+    // (No-op here; existing compute likely checks .active on chips)
+  });
+});
+</script>
+
 </body>
 </html>
