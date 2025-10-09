@@ -63,6 +63,111 @@ a{color:#0d5bd7}
 .lr-find-box { background: #fff0f0; border-radius: 10px; padding: 8px; margin-top: 6px; }
 .sep{border-top:1px solid #e5e7eb;margin:8px 0}
 .row + .row{border-top:1px solid #eef2f7;padding-top:6px;margin-top:6px}
+
+/* White background behind "Exam situation" input area in Lung-RADS mode */
+#lungrads .row.exam-situation {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+
+/* Subtle widen for the Solid→Behavior 'Slow growth' chip */
+#lr_behavior_solid_chips .chip[data-val="slow_multi"] {
+  min-width: 8.5ch;
+  text-align: center;
+  padding: 0.45rem 0.9rem;
+}
+
+
+/* Fleischner right-column: light blue panel with thin inner rectangles like Lung-RADS */
+#fleischner .grid > div:last-child,
+#fleischner .lrlike-panel {
+  background: #f5f9ff;
+  border-radius: 8px;
+  padding: 14px;
+}
+#fleischner .lrlike-panel .row {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+#fleischner .lrlike-panel h2 {
+  /* keep the title outside the thin rectangle look */
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+
+/* Fleischner right-column light-blue panel with thin inner rectangles (match Lung-RADS right column) */
+#fleischner .nodule-box {
+  background: #f5f9ff;
+  border-radius: 8px;
+  padding: 14px;
+}
+#fleischner .nodule-box .row {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+#fleischner .nodule-box h2 {
+  margin-top: 0;
+  margin-bottom: 8px; /* keep title outside the thin rectangles */
+}
+
+
+/* Light blue background for Fleischner Nodule section boxes */
+#fleischner .nodule-box .row {
+  background: #f0f8ff;
+}
+
+
+/* Match Lung-RADS left-column styling for Fleischner left column */
+#fleischner .grid > div:first-child .row {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+
+/* Add pink accent to Risk level block to match Lung-RADS find box */
+#fleischner .risk-box {
+  background-color: #ffeef2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+
+/* Pink accent for Fleischner "Risk level" row (uses :has to target the row containing #fl_risk) */
+#fleischner .grid > div:first-child .row:has(#fl_risk) {
+  background-color: #ffeef2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+
+/* Lighter pastel red background for Risk level box */
+#fleischner .risk-level-box, 
+#fleischner .risk-level, 
+#fleischner .risk-box {
+  background: #fff8f8 !important;
+  border: 1px solid #e6bfbf !important;
+}
+
+
+/* Enforce lighter pastel red for Risk level box */
+#fleischner .risk-box { background: #fff8f8 !important; border: 1px solid #e6bfbf !important; }
+
 </style>
 
 <style>
@@ -100,6 +205,34 @@ a{color:#0d5bd7}
 }
 </style>
 
+<style>
+/* Force lighter pastel red for Risk level box (high specificity & Safari-friendly) */
+#fleischner .grid > div:first-child .row:has(#fl_risk) {
+  background-color: #fffafa !important; /* barely pink */
+  border: 1px solid #e6bfbf !important;
+}
+#fleischner .risk-box {
+  background-color: #fffafa !important;
+  border: 1px solid #e6bfbf !important;
+}
+</style>
+<style>
+/* Slightly redder tint and lighter outline for Risk level box */
+#fleischner .grid > div:first-child .row:has(#fl_risk),
+#fleischner .risk-box {
+  background-color: #fff3f3 !important; /* a touch more red */
+  border: 1px solid #f4dede !important; /* lighter outline */
+}
+</style>
+
+<style>
+/* Hide Fleischner action buttons */
+#fleischner button#fl_compute,
+#fleischner button#fl_reset {
+  display: none !important;
+}
+</style>
+
 </head>
 <body>
 <div id="errbar"></div>
@@ -114,7 +247,7 @@ a{color:#0d5bd7}
   <section id="fleischner" class="section active">
     <div class="card" style="margin-bottom:12px">
       <div class="grid">
-        <div>
+<div>
           <h2>Patient / Context</h2>
           <div class="row">
             
@@ -244,7 +377,7 @@ a{color:#0d5bd7}
       <div class="grid">
         <div>
           <h2>Context</h2>
-          <div class="row">
+          <div class="row exam-situation">
             <label>Exam situation</label>
             <select id="lr_examSituation">
               <option value="routine">Routine screening interpretation</option>
@@ -293,17 +426,19 @@ a{color:#0d5bd7}
     <button type="button" class="chip" data-val="baseline">Baseline</button>
     <button type="button" class="chip" data-val="new">New</button>
     <button type="button" class="chip" data-val="growing">Growing</button>
-    <button type="button" class="chip" data-val="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</button>
+    <button type="button" class="chip" data-val="slow_multi">Slow growth</button>
   </div>
-  <select id="lr_behavior_solid" class="hidden-select">
+  
+  <div class="small-muted" style="margin-top:4px;">“Growing” = average diameter has increased by ≥1.5 mm. “Slow growth” = average diameter has increased over multiple exams but &lt;1.5 mm per 12 months.</div>
+<select id="lr_behavior_solid" class="hidden-select">
                 <option value="baseline" selected>Baseline</option>
                 <option value="new">New</option>
                 <option value="growing">Growing</option>
-                <option value="slow_multi">Slow growth over multiple exams but &lt;1.5 mm per 12 mo</option>
+                <option value="slow_multi">Slow growth</option>
               </select>
 </div>
             <div class="row">
-  <label>Total mean diameter (mm)</label>
+  <label>Total mean diameter</label>
 
   <div class="chip-group size-chip-group" id="lr_size_solid_chips" data-select="lr_size_solid_cat" data-value="6to7_9">
     <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
@@ -340,7 +475,7 @@ a{color:#0d5bd7}
 
 </div>
             <div class="row">
-  <label>Total mean diameter (mm)</label>
+  <label>Total mean diameter</label>
 
   <div class="chip-group size-chip-group" id="lr_size_ps_chips" data-select="lr_size_part_cat" data-value="6to7_9">
     <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
@@ -359,7 +494,7 @@ a{color:#0d5bd7}
 
 </div>
             <div class="row" id="lr_solidCompRow_part">
-              <label>Solid component (mm)</label>
+              <label>Solid component</label>
               
   <div class="chip-group" id="lr_sc_part_chips" data-select="lr_solidComp_part_cat" data-value="lt4">
     <button type="button" class="chip" data-val="lt4">0.1 to 3.9 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="ge8">&ge;8.0 mm</button>
@@ -396,7 +531,7 @@ a{color:#0d5bd7}
 
 </div>
             <div class="row">
-  <label>Total mean diameter (mm)</label>
+  <label>Total mean diameter</label>
 
   <div class="chip-group size-chip-group" id="lr_size_ns_chips" data-select="lr_size_ns_cat" data-value="6to7_9">
     <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
@@ -432,7 +567,7 @@ a{color:#0d5bd7}
 
 </div>
             <div class="row">
-  <label>Total mean diameter (mm)</label>
+  <label>Total mean diameter</label>
 
   <div class="chip-group size-chip-group" id="lr_size_jp_chips" data-select="lr_size_juxta_cat" data-value="6to7_9">
     <button type="button" class="chip" data-val="lt4">&lt;4.0 mm</button><button type="button" class="chip" data-val="4to5_9">4.0 to 5.9 mm</button><button type="button" class="chip" data-val="6to7_9">6.0 to 7.9 mm</button><button type="button" class="chip" data-val="8to9_9">8.0 to 9.9 mm</button><button type="button" class="chip" data-val="10to14_9">10.0 to 14.9 mm</button><button type="button" class="chip" data-val="15to29_9">15.0 to 29.9 mm</button><button type="button" class="chip" data-val="ge30">&ge;30.0 mm</button>
@@ -457,24 +592,20 @@ a{color:#0d5bd7}
                 <option value="no">No</option>
               </select>
             </div>
-            <div class="muted">If benign morphology is present and size <10 mm, assign Lung‑RADS 2. Otherwise, treat like a solid nodule.</div>
-            <div class="row">
             </div>
-            <div class="muted">Currently treated like a solid nodule for category calculation. (We can refine per v2022 specs if you like.)</div>
-          </div>
 
           <div id="mode_airway" class="modebox" style="display:none">
             <div class="row">
   <label>Location</label>
 
   <div class="chip-group" id="airway_loc_chips" data-select="lr_airway_mode" data-value="subsegmental">
-    <button type="button" class="chip" data-val="subsegmental">Subsegmental / multiple tubular (no soft tissue nodule)</button><button type="button" class="chip" data-val="segmental_baseline">Segmental or more proximal — current exam</button><button type="button" class="chip" data-val="segmental_persistent">Segmental/proximal that persisted from 3‑mo FU</button>
+    <button type="button" class="chip" data-val="subsegmental">Subsegmental and/or multiple tubular</button><button type="button" class="chip" data-val="segmental_baseline">Segmental or more proximal - baseline</button><button type="button" class="chip" data-val="segmental_persistent">Segmental or more proximal - stable or growing</button>
   </div>
   <select id="lr_airway_mode" class="hidden-select">
     
-                <option value="subsegmental">Subsegmental / multiple tubular (no soft tissue nodule)</option>
-                <option value="segmental_baseline">Segmental or more proximal — current exam</option>
-                <option value="segmental_persistent">Segmental/proximal that persisted from 3‑mo FU</option>
+                <option value="subsegmental">Subsegmental and/or multiple tubular</option>
+                <option value="segmental_baseline">Segmental or more proximal - baseline</option>
+                <option value="segmental_persistent">Segmental or more proximal - stable or growing</option>
               
   </select>
 
@@ -499,12 +630,12 @@ a{color:#0d5bd7}
     <div class="chip-group" id="cyst_status" data-value="baseline">
       <button type="button" class="chip active" data-val="baseline">Baseline</button>
       <button type="button" class="chip" data-val="progression">Progression</button>
-      <button type="button" class="chip" data-val="growing_cystic">Growing cystic component</button>
-    </div>
+      </div>
   </div>
   <div id="cyst_prog_details" style="display:none">
     <label class="small-muted">Progression details (optional)</label>
     <div class="chip-group" id="cyst_progchips">
+        <button type="button" class="chip" data-val="growing_cystic">Growing cystic component</button>
       <button type="button" class="chip chip-muted" data-val="becomes_multiloc">Becomes multilocular</button>
       <button type="button" class="chip chip-muted" data-val="increased_loculation">Increased loculation</button>
       <button type="button" class="chip chip-muted" data-val="growing_wall_or_nodularity">Growing wall thickness/nodularity</button>
@@ -916,7 +1047,7 @@ function setLrResult(cat){
     }
 
     if (!cat){ cat="Unable to categorize"; management="Check inputs."; }
-    byId('lr_result').textContent = 'Category: ' + cat + '\nReasons:\n- ' + reason.join('\n- ') + '\nManagement:\n' + management;
+    byId('lr_result').textContent = 'Category: ' + cat + '\nReasons:\n- ' + reason.join('\n- ') + '\nManagement: ' + (typeof management!=='undefined' ? management : '');
     byId('lr_notes').innerHTML = '<div class="muted">Notes: Short-interval FU downgrades may apply per Lung-RADS v2022.</div>';
   }
 
@@ -1036,7 +1167,156 @@ function setLrResult(cat){
 // ---- Cyst chips wiring (Option C) ----
 
 function setupCystChips(){
-  var morph = byId('cyst_morph'), status = byId('cyst_status'),
+  
+  
+  
+  // Map current UI selections to hidden select for compute
+  function setCystHiddenFromUI(){
+    try{
+      var morph = byId('cyst_morph');
+      var status = byId('cyst_status');
+      var details = byId('cyst_progchips');
+      var hidden = byId('lr_cyst_mode');
+      if(!morph || !status || !hidden) return;
+      var m = morph.dataset.value || '';
+      var s = status.dataset.value || '';
+      var det = null;
+      if (details){
+        var act = details.querySelector('.chip.active');
+        det = act ? act.getAttribute('data-val') : null;
+      }
+      // Defaults
+      var code = hidden.value;
+      // Thick-walled mapping
+      if (m==='thick'){
+        if (s==='baseline'){
+          // Thick baseline (no progression) → 4A per spec (thick-walled at baseline)
+          code = '4a_thick_or_multiloc';
+        } else if (s==='progression'){
+          if (det === 'becomes_multiloc'){ code = '4a_thick_or_multiloc'; }
+          else if (det === 'growing_wall_or_nodularity'){ code = '4b_progression'; }
+          else if (det === 'growing_cystic'){ code = '3_growing_cystic'; }
+          else { code = '3_growing_cystic'; }
+        }
+      } else if (m==='thin'){
+        // Thin baseline → 2; thin progression becomes multiloc → 4A; others could vary
+        if (s==='baseline'){ code = '2_thin_baseline'; }
+        else if (s==='progression'){
+          if (det === 'becomes_multiloc'){ code = '4a_thick_or_multiloc'; }
+          else { code = '3_growing_cystic'; }
+        }
+      }
+      hidden.value = code;
+    }catch(e){ /* no-op */ }
+  }
+
+// Dynamically enforce cyst UI based on morphology/status
+  function enforceCystUI(){
+    try{
+      var morph = byId('cyst_morph');
+      var status = byId('cyst_status');
+      var details = byId('cyst_progchips');
+      if(!morph || !status || !details) return;
+      var m = morph.dataset.value || 'thin';
+      var s = status.dataset.value || 'baseline';
+
+      // Progression detail options for thick-walled only
+      var allowedThickProgress = ['growing_cystic','becomes_multiloc','growing_wall_or_nodularity'];
+
+      // Normalize: show all by default (we'll hide selectively)
+      var detBtns = details.querySelectorAll('.chip');
+      for (var i=0;i<detBtns.length;i++){ detBtns[i].style.display = ''; }
+
+      if (m === 'thick') {
+        // Status options must be only Baseline/Progression (keep prior logic if present elsewhere)
+        var stBtns = status.querySelectorAll('.chip');
+        for (var j=0;j<stBtns.length;j++){
+          var v = stBtns[j].getAttribute('data-val');
+          var keep = (v === 'baseline' || v === 'progression');
+          stBtns[j].style.display = keep ? '' : 'none';
+        }
+        if (s !== 'baseline' && s !== 'progression'){
+          setActive(status, 'baseline');
+          s = 'baseline';
+        }
+
+        // If status = Progression, show only 3 specific detail options and enforce order
+        if (s === 'progression'){
+          for (var k=0;k<detBtns.length;k++){
+            var dv = detBtns[k].getAttribute('data-val');
+            detBtns[k].style.display = (allowedThickProgress.indexOf(dv) !== -1) ? '' : 'none';
+          }
+          // enforce order
+          allowedThickProgress.forEach(function(key){
+            var el = details.querySelector('.chip[data-val="'+key+'"]');
+            if (el) details.appendChild(el);
+          });
+        } else {
+          // If not progression, clear any active selection in details
+          var act = details.querySelectorAll('.chip.active');
+          for (var a=0;a<act.length;a++){ act[a].classList.remove('active'); }
+          // Optionally hide all details while baseline (comment out next 3 lines to keep visible but inactive)
+          for (var k2=0;k2<detBtns.length;k2++){ detBtns[k2].style.display = 'none'; }
+        }
+      } else {
+        // Non-thick morphology: make sure everything is visible (no restriction here)
+        var stBtnsAll = status.querySelectorAll('.chip');
+        for (var j2=0;j2<stBtnsAll.length;j2++){ stBtnsAll[j2].style.display = ''; }
+        for (var i2=0;i2<detBtns.length;i2++){ detBtns[i2].style.display = ''; }
+      }
+    }catch(e){ /* no-op */ }
+  }
+
+// Enforce UI constraints for Thick-walled morphology
+  function enforceThickUI(){
+    try{
+      var morph = byId('cyst_morph');
+      var status = byId('cyst_status');
+      var details = byId('cyst_progchips');
+      if(!morph || !status || !details) return;
+      var m = morph.dataset.value || 'thin';
+      var s = status.dataset.value || 'baseline';
+
+      var statusBtns = status.querySelectorAll('.chip');
+      var detailBtns = details.querySelectorAll('.chip');
+
+      if(m === 'thick'){
+        // Only Baseline and Progression in Status
+        for (var i=0;i<statusBtns.length;i++){
+          var v = statusBtns[i].getAttribute('data-val');
+          var keep = (v === 'baseline' || v === 'progression');
+          statusBtns[i].style.display = keep ? '' : 'none';
+        }
+        if (s !== 'baseline' && s !== 'progression'){
+          setActive(status, 'baseline');
+          s = 'baseline';
+        }
+        // Only 3 details in a specific order
+        var order = ['growing_cystic', 'becomes_multiloc', 'growing_wall_or_nodularity'];
+        for (var j=0;j<detailBtns.length;j++){
+          var dv = detailBtns[j].getAttribute('data-val');
+          var keepD = (order.indexOf(dv) !== -1);
+          detailBtns[j].style.display = keepD ? '' : 'none';
+        }
+        // Reorder DOM nodes to the desired order
+        order.forEach(function(key){
+          var el = details.querySelector('.chip[data-val="'+key+'"]');
+          if (el) details.appendChild(el);
+        });
+        // If not progression, clear any active detail selection
+        if (s !== 'progression'){
+          var act = details.querySelectorAll('.chip.active');
+          for (var k=0;k<act.length;k++){ act[k].classList.remove('active'); }
+        }
+      } else {
+        // Leaving thick: unhide everything
+        for (var i2=0;i2<statusBtns.length;i2++){ statusBtns[i2].style.display = ''; }
+        for (var j2=0;j2<detailBtns.length;j2++){ detailBtns[j2].style.display = ''; }
+      }
+    }catch(e){}
+  }
+
+var morph = byId('cyst_morph'), status = byId('cyst_status'),
       detailsWrap = byId('cyst_prog_details'), details = byId('cyst_progchips'),
       hidden = byId('lr_cyst_mode');
   if(!morph || !status || !hidden) return;
@@ -1055,14 +1335,195 @@ function setupCystChips(){
   }
 
   function toggleDetail(btn){
-    btn.classList.toggle('active');
+    // make selection mutually exclusive within the same chip group
+    var group = btn.parentElement;
+    if (!group) { btn.classList.toggle('active'); return; }
+    var wasActive = btn.classList.contains('active');
+    var chips = group.querySelectorAll('.chip');
+    for (var i=0;i<chips.length;i++){ chips[i].classList.remove('active'); }
+    if (!wasActive){ btn.classList.add('active'); }
   }
 
   function recomputeHidden(){
     var m = morph.dataset.value || 'thin';
     var s = status.dataset.value || 'baseline';
-    if(s==='growing_cystic'){
+    // Constrain options for THIN-WALLED cyst:
+    try {
+      // Show only 'Progression' in Status if morph is thin
+      var statusBtns = status.querySelectorAll('.chip');
+      for (var i=0;i<statusBtns.length;i++){
+        var v = statusBtns[i].getAttribute('data-val');
+        if (m==='thin'){
+          statusBtns[i].style.display = (v==='progression') ? '' : 'none';
+        
+/* --- OVERRIDE: Correct thick-walled cyst progression mapping --- */
+try {
+  // Ensure these refs exist
+  if (typeof morph !== 'undefined' && typeof status !== 'undefined') {
+    var m = morph && morph.dataset ? morph.dataset.value : null;
+    var s = status && status.dataset ? status.dataset.value : null;
+    var details = document.getElementById('cyst_progchips');
+    if (m === 'thick' && s === 'progression' && details) {
+      // Collect active detail values
+      var chips = details.querySelectorAll('.chip');
+      var active = [];
+      for (var i = 0; i < chips.length; i++) {
+        if (chips[i].classList.contains('active')) {
+          var v = chips[i].getAttribute('data-val');
+          if (v) active.push(v);
+        
+/* --- OVERRIDE 3: Correct mapping for Thick-walled cyst (Progression) --- */
+try {
+  var morphEl = byId('cyst_morph');
+  var statusEl = byId('cyst_status');
+  var detailsEl = byId('cyst_progchips');
+  var hv = byId('lr_cyst_mode');
+  if (morphEl && statusEl && detailsEl && hv) {
+    var m = morphEl.dataset.value || '';
+    var s = statusEl.dataset.value || '';
+    if (m === 'thick' && s === 'progression') {
+      var activeVal = null;
+      var chips = detailsEl.querySelectorAll('.chip');
+      for (var i=0;i<chips.length;i++){
+        if (chips[i].classList.contains('active')){
+          activeVal = chips[i].getAttribute('data-val');
+          break;
+        }
+      }
+      if (activeVal === 'becomes_multiloc') {
+        hv.value = '4a_thick_or_multiloc';
+      } else if (activeVal === 'growing_wall_or_nodularity') {
+        hv.value = '4b_progression';
+      } else if (activeVal === 'growing_cystic') {
+        hv.value = '3_growing_cystic';
+      } else {
+        // default
+        hv.value = '3_growing_cystic';
+      }
+    }
+  }
+} catch(__e) { /* no-op */ }
+/* --- END OVERRIDE 3 --- */
+  setCystHiddenFromUI();
+}
+      }
+      // Apply correct mapping:
+      //  - becomes_multiloc -> 4A
+      //  - growing_wall_or_nodularity -> 4B
+      //  - growing_cystic -> 3
+      if (active.indexOf('becomes_multiloc') !== -1) {
+        hidden.value = '4a_thick_or_multiloc';
+      } else if (active.indexOf('growing_wall_or_nodularity') !== -1) {
+        hidden.value = '4b_progression';
+      } else if (active.indexOf('growing_cystic') !== -1) {
+        hidden.value = '3_growing_cystic';
+      } else {
+        hidden.value = '3_growing_cystic';
+      }
+    }
+    // If a direct "growing_cystic" status is ever used, force 3
+    if (s === 'growing_cystic') {
       hidden.value = '3_growing_cystic';
+    }
+  }
+} catch (_e) { /* no-op */ }
+/* --- END OVERRIDE --- */
+} else {
+          statusBtns[i].style.display = '';
+        }
+      }
+      // Force status to 'progression' when thin
+      if (m==='thin' && s!=='progression'){
+        setActive(status, 'progression');
+        s = 'progression';
+      }
+      // Show only 'becomes_multiloc' in Progression details when thin
+      if (typeof details !== 'undefined' && details){
+        var detBtns = details.querySelectorAll('.chip');
+        for (var j=0;j<detBtns.length;j++){
+          var dv = detBtns[j].getAttribute('data-val');
+          if (m==='thin'){
+            detBtns[j].style.display = (dv==='becomes_multiloc') ? '' : 'none';
+          } else {
+            detBtns[j].style.display = '';
+          }
+        }
+        // Auto-activate becomes_multiloc if morph thin and status progression
+
+    // Constrain options for THICK-WALLED cyst:
+    try {
+      if (m==='thick') {
+        // Show only Baseline and Progression in Status
+        var statusBtns2 = status.querySelectorAll('.chip');
+        for (var i2=0;i2<statusBtns2.length;i2++){
+          var v2 = statusBtns2[i2].getAttribute('data-val');
+          statusBtns2[i2].style.display = (v2==='baseline' || v2==='progression') ? '' : 'none';
+        }
+        if (s!=='baseline' && s!=='progression'){
+          setActive(status, 'baseline');
+          s = 'baseline';
+        }
+
+        // Ensure 'growing_cystic' is available as a details chip (clone from status if missing)
+        if (typeof details !== 'undefined' && details){
+          var gcDetail = details.querySelector('.chip[data-val="growing_cystic"]');
+          if (!gcDetail) {
+            var gcStatus = status.querySelector('.chip[data-val="growing_cystic"]');
+            if (gcStatus){
+              var clone = gcStatus.cloneNode(true);
+              clone.setAttribute('data-cloned', '1');
+              // ensure muted style initially
+              clone.classList.remove('active'); 
+              if (!clone.classList.contains('chip-muted')) clone.classList.add('chip-muted');
+              details.appendChild(clone);
+            }
+          }
+          // Show only the three detail chips
+          var allowed = {'growing_cystic':1, 'becomes_multiloc':1, 'growing_wall_or_nodularity':1};
+          var detBtns2 = details.querySelectorAll('.chip');
+          for (var j2=0;j2<detBtns2.length;j2++){
+            var dv2 = detBtns2[j2].getAttribute('data-val');
+            detBtns2[j2].style.display = allowed[dv2] ? '' : 'none';
+          }
+          
+          // Reorder details chips to: growing_cystic, becomes_multiloc, growing_wall_or_nodularity
+          try {
+            var desired = ['growing_cystic','becomes_multiloc','growing_wall_or_nodularity'];
+            desired.forEach(function(key){
+              var btn = details.querySelector('.chip[data-val="'+key+'"]');
+              if (btn) details.appendChild(btn);
+            });
+          } catch(_r) {}
+// If status is not progression, de-activate any active detail chip (details are only for progression)
+          if (s !== 'progression'){
+            var act = details.querySelectorAll('.chip.active');
+            for (var a=0;a<act.length;a++){ act[a].classList.remove('active'); }
+          }
+        }
+      } else {
+        // Leaving thick mode: remove any cloned growing_cystic detail chip
+        if (typeof details !== 'undefined' && details){
+          var clones = details.querySelectorAll('.chip[data-val="growing_cystic"][data-cloned="1"]');
+          for (var c=0;c<clones.length;c++){ clones[c].remove(); }
+        }
+      }
+    } catch(__e) {}
+
+        if (m==='thin'){
+          var bm = details.querySelector('.chip[data-val="becomes_multiloc"]');
+          if (bm && !bm.classList.contains('active')) {
+            // clear actives then set this one
+            var all = details.querySelectorAll('.chip.active');
+            for (var k=0;k<all.length;k++){ all[k].classList.remove('active'); }
+            bm.classList.add('active');
+          }
+        }
+      }
+    } catch(_e) {}
+
+    if (s==='growing_cystic'){
+      // Thick-walled + 'Growing cystic component' should be 4A; otherwise default 3
+      hidden.value = (m==='thick') ? '4a_thick_or_multiloc' : '3_growing_cystic';
       detailsWrap.style.display = 'none';
     }else if(s==='progression'){
       detailsWrap.style.display = 'block';
@@ -1092,19 +1553,19 @@ function setupCystChips(){
   morph.addEventListener('click', function(e){
     var btn = e.target.closest('.chip');
     if(!btn) return;
-    setActive(morph, btn.getAttribute('data-val'));
+    setActive(morph, btn.getAttribute('data-val')); enforceCystUI(); setCystHiddenFromUI(); enforceThickUI();
     recomputeHidden();
   });
 
   status.addEventListener('click', function(e){
     var btn = e.target.closest('.chip');
     if(!btn) return;
-    setActive(status, btn.getAttribute('data-val'));
+    setActive(status, btn.getAttribute('data-val')); enforceCystUI(); setCystHiddenFromUI(); enforceThickUI();
     recomputeHidden();
   });
 
   if (details){
-    details.addEventListener('click', function(e){
+    details.addEventListener('click', function(e){ enforceCystUI(); setCystHiddenFromUI(); enforceThickUI();
       var btn = e.target.closest('.chip');
       if(!btn) return;
       toggleDetail(btn);
@@ -1116,8 +1577,9 @@ function setupCystChips(){
   setActive(morph, morph.dataset.value || 'thin');
   setActive(status, status.dataset.value || 'baseline');
   recomputeHidden();
+  enforceThickUI();
+  enforceCystUI();
 }
-
 function setupFlImmunoRadios(){
   var radios = document.querySelectorAll('input[name="fl_isEligible_radio"]');
   var sel = byId('fl_isEligible');
@@ -1441,7 +1903,42 @@ byId('fl_type').addEventListener('change', fl_updateSolidComp);
     byId('fl_reset').addEventListener('click', function(){ location.reload(); });
     fl_updateSolidComp();
 
-    byId('lr_compute').addEventListener('click', function(){ safeRun("lr_compute", lr_compute); });
+    byId('lr_compute').addEventListener('click', function(){ safeRun("lr_compute", lr_compute); 
+    // FINAL OVERRIDE: Thick-walled cyst progression → map details correctly
+    try{
+      var modeSel = byId('lr_mode');
+      if (modeSel && modeSel.value === 'cyst'){
+        var morphEl = byId('cyst_morph');
+        var statusEl = byId('cyst_status');
+        var detailsEl = byId('cyst_progchips');
+        if (morphEl && statusEl && detailsEl){
+          var m = morphEl.dataset.value || '';
+          var s = statusEl.dataset.value || '';
+          if (m === 'thick' && s === 'progression'){
+            var activeVal = null;
+            var chips = detailsEl.querySelectorAll('.chip');
+            for (var i=0;i<chips.length;i++){
+              if (chips[i].classList.contains('active')){
+                activeVal = chips[i].getAttribute('data-val');
+                break;
+              }
+            }
+            if (activeVal === 'growing_cystic'){
+              // Force category and management for this case
+              cat = '3';
+              mgmt = '6-month LDCT.';
+            } else if (activeVal === 'becomes_multiloc'){
+              cat = '4A';
+              mgmt = '3-month LDCT; consider PET/CT and/or tissue sampling based on probability of malignancy.';
+            } else if (activeVal === 'growing_wall_or_nodularity'){
+              cat = '4B';
+              mgmt = 'Diagnostic chest CT ± contrast; consider PET/CT and/or tissue sampling.';
+            }
+          }
+        }
+      }
+    }catch(_e){} 
+    });
     byId('lr_reset').addEventListener('click', function(){ location.reload(); });
     byId('lr_mode').addEventListener('change', showMode);
     byId('lr_diag_btn').addEventListener('click', lr_diag);
@@ -2060,5 +2557,107 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+
+<script>
+(function(){
+  // Post-compute correction for Atypical pulmonary cyst (Thick-walled) mappings
+  function correctCystCategory(){
+    try{
+      var mode = document.getElementById('lr_mode');
+      if(!mode || mode.value !== 'cyst') return;
+      var morph = document.getElementById('cyst_morph');
+      var status = document.getElementById('cyst_status');
+      var details = document.getElementById('cyst_progchips');
+      if(!morph || !status || !details) return;
+      var m = morph.dataset.value, s = status.dataset.value;
+      var det = (function(){
+        var a = details.querySelector('.chip.active');
+        return a ? a.getAttribute('data-val') : null;
+      })();
+      var fixCat = null, fixMgmt = null;
+      if(m === 'thick' && s === 'progression'){
+        if(det === 'growing_cystic'){
+          fixCat = '4A';
+          fixMgmt = '3-month LDCT; consider PET/CT and/or tissue sampling based on probability of malignancy.';
+        } else if(det === 'growing_wall_or_nodularity'){
+          fixCat = '4B';
+          fixMgmt = 'Diagnostic chest CT ± contrast; consider PET/CT and/or tissue sampling.';
+        }
+      }
+      if(fixCat){
+        var out = document.getElementById('lr_result');
+        if(out){
+          // Keep consistent format: single-line category and management
+          out.innerHTML = 'Category: ' + fixCat + '  —  Management: ' + (fixMgmt || '');
+        }
+      }
+    }catch(e){/* no-op */}
+  }
+
+  // Wire correction after compute clicks and user interactions
+  var btn = document.getElementById('lr_compute');
+  if(btn){
+    btn.addEventListener('click', function(){ setTimeout(correctCystCategory, 0); setTimeout(correctCystCategory, 120); }, true);
+  }
+  // Also run on general interactions inside Lung-RADS to keep in sync
+  var root = document.getElementById('lungrads');
+  if(root){
+    ['change','click'].forEach(function(ev){
+      root.addEventListener(ev, function(){ setTimeout(correctCystCategory, 120); }, true);
+    });
+  }
+})();
+</script>
+
+<script>
+/* --- OVERRIDE 2: Strict option set for Thick-walled cyst --- */
+try {
+  var morph = document.getElementById('cyst_morph');
+  var status = document.getElementById('cyst_status');
+  var statusChips = document.getElementById('cyst_statuschips') || status;
+  var details = document.getElementById('cyst_progchips');
+
+  if (morph && status && details) {
+    var m = morph.dataset ? morph.dataset.value : null;
+    var s = status.dataset ? status.dataset.value : null;
+
+    if (m === 'thick') {
+      // Show only Baseline and Progression in Status
+      var keepStatus = { 'baseline':1, 'progression':1 };
+      var stBtns = (statusChips || status).querySelectorAll('.chip');
+      for (var i=0;i<stBtns.length;i++) {
+        var v = stBtns[i].getAttribute('data-val');
+        stBtns[i].style.display = keepStatus[v] ? '' : 'none';
+      }
+      if (!keepStatus[s]) {
+        if (statusChips && typeof setActive === 'function') setActive(statusChips, 'baseline');
+        else if (typeof setActive === 'function') setActive(status, 'baseline');
+        status.dataset.value = 'baseline';
+        s = 'baseline';
+      }
+
+      // Show only 3 detail options
+      var keepDetails = { 'growing_cystic':1, 'becomes_multiloc':1, 'growing_wall_or_nodularity':1 };
+      var detBtns = details.querySelectorAll('.chip');
+      for (var j=0;j<detBtns.length;j++) {
+        var dv = detBtns[j].getAttribute('data-val');
+        detBtns[j].style.display = keepDetails[dv] ? '' : 'none';
+      }
+      // If status is not progression, de-activate any selected detail (details are only meaningful for progression)
+      if (s !== 'progression') {
+        var act = details.querySelectorAll('.chip.active');
+        for (var a=0;a<act.length;a++) act[a].classList.remove('active');
+      }
+    } else {
+      // Leaving thick: unhide any previously hidden chips
+      var allSt = (statusChips || status).querySelectorAll('.chip');
+      for (var i2=0;i2<allSt.length;i2++) allSt[i2].style.display = '';
+      var allDet = details.querySelectorAll('.chip');
+      for (var j2=0;j2<allDet.length;j2++) allDet[j2].style.display = '';
+    }
+  }
+} catch(__e) { /* no-op */ }
+/* --- END OVERRIDE 2 --- */
+</script>
 </body>
 </html>
