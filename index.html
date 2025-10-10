@@ -870,7 +870,7 @@ function setLrResult(cat){
     if(m==='partsolid'){ ensurePartListeners(); setTimeout(togglePartSolidSC, 0); }
   }
 
-  function lr_compute_internal(){
+  function lr_compute(){
     // Preflight presence checks per mode to catch any missing elements
     var _mdEl = byId('lr_mode'); var _mdVal = _mdEl ? _mdEl.value : 'solid';
     var missing = [];
@@ -1048,7 +1048,30 @@ function setLrResult(cat){
 
     if (!cat){ cat="Unable to categorize"; management="Check inputs."; }
     byId('lr_result').textContent = 'Category: ' + cat + '\nReasons:\n- ' + reason.join('\n- ') + '\nManagement: ' + (typeof management!=='undefined' ? management : '');
-    // Removed HARD OVERRIDE for Thick-walled cyst (v24 patch)
+    // HARD OVERRIDE for Thick-walled cyst → Progression → Growing cystic component
+    (function(){
+      try{
+        var modeSel = byId('lr_mode');
+        if (modeSel && modeSel.value === 'cyst'){
+          var morphEl = byId('cyst_morph');
+          var statusEl = byId('cyst_status');
+          var detailsEl = byId('cyst_progchips');
+          if (morphEl && statusEl && detailsEl){
+            var m = morphEl.dataset.value || '';
+            var s = statusEl.dataset.value || '';
+            var det = null;
+            var act = detailsEl.querySelector('.chip.active');
+            if (act) det = act.getAttribute('data-val');
+            if (m==='thick' && s==='progression' && det==='growing_cystic'){
+              var out = byId('lr_result');
+              if (out){
+                out.textContent = 'Category: 3\\nManagement: 6-month LDCT.';
+              }
+            }
+          }
+        }
+      }catch(e){}
+    })();
 
     byId('lr_notes').innerHTML = '<div class="muted">Notes: Short-interval FU downgrades may apply per Lung-RADS v2022.</div>';
   }
@@ -3166,104 +3189,6 @@ try {
     updateCystUI();
   });
 })();
-</script>
-
-<script>
-// v34 definitive interception patch: stop autocompute for cyst chips
-document.addEventListener('DOMContentLoaded', function(){
-  const blockers = document.querySelectorAll('[data-val="growing_cystic"], [data-val="growing_wall_or_nodularity"]');
-  blockers.forEach(ch => {
-    ch.addEventListener('click', function(e){
-      // Stop any event from propagating to handlers that call lr_compute()
-      e.stopImmediatePropagation();
-      e.stopPropagation();
-      // Just toggle UI state without computing
-      if (ch.classList.contains('active')) {
-        ch.classList.remove('active');
-      } else {
-        const group = ch.closest('#cyst_progchips');
-        if(group) group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-        ch.classList.add('active');
-      }
-    }, true);
-  });
-});
-</script>
-
-<script>
-// v35: Wrap lr_compute to skip autocompute for cyst-specific modes
-document.addEventListener('DOMContentLoaded', function(){
-  if (typeof window.lr_compute === 'function') {
-    const original_lr_compute = window.lr_compute;
-    window.lr_compute = function(){
-      try {
-        const modeEl = document.getElementById('lr_cyst_mode');
-        const val = modeEl ? modeEl.value.toLowerCase() : '';
-        if (val.includes('growing_cystic') || val.includes('growing_wall_or_nodularity')) {
-          console.log('lr_compute skipped for cyst autocompute protection');
-          return;
-        }
-      } catch(e) { console.warn('lr_compute wrapper error', e); }
-      return original_lr_compute.apply(this, arguments);
-    };
-  }
-});
-</script>
-
-<script>
-// v36: Redefine lr_compute to guard against cyst autocompute
-function lr_compute() {
-  try {
-    var modeEl = document.getElementById('lr_cyst_mode');
-    var val = modeEl ? modeEl.value.toLowerCase() : '';
-    if (val.includes('growing_cystic') || val.includes('growing_wall_or_nodularity')) {
-      console.log('lr_compute blocked for cyst autocompute');
-      return;
-    }
-  } catch(e) { console.warn('lr_compute guard error', e); }
-  return lr_compute_internal.apply(this, arguments);
-}
-</script>
-
-<script>
-// v37 definitive cyst fix: redefine lr_setCat to remove autocompute behavior
-document.addEventListener('DOMContentLoaded', function(){
-  if (typeof window.lr_setCat === 'function') {
-    const old_lr_setCat = window.lr_setCat;
-    window.lr_setCat = function(cat) {
-      try {
-        // Call original logic but intercept any internal lr_compute calls by temporarily disabling them
-        const old_lr_compute = window.lr_compute;
-        window.lr_compute = function() {
-          console.log('lr_compute suppressed inside lr_setCat redefinition');
-          return;
-        };
-        old_lr_setCat.call(this, cat);
-        window.lr_compute = old_lr_compute; // restore afterward
-      } catch(e) {
-        console.warn('Error redefining lr_setCat', e);
-      }
-    };
-  }
-});
-</script>
-
-<script>
-// v38: Make lr_cyst_mode inert (disable any reactive auto-calls tied to .value changes)
-document.addEventListener('DOMContentLoaded', function(){
-  var el = document.getElementById('lr_cyst_mode');
-  if (el) {
-    try {
-      let val = el.value;
-      Object.defineProperty(el, 'value', {
-        configurable: true,
-        enumerable: true,
-        writable: true,
-        value: val
-      });
-    } catch(e) { /* silent */ }
-  }
-});
 </script>
 </body>
 </html>
