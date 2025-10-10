@@ -381,8 +381,8 @@ a{color:#0d5bd7}
             <label>Exam situation</label>
             <select id="lr_examSituation">
               <option value="routine">Routine screening interpretation</option>
-              <option value="awaiting_prior">Prior chest CT being located (temporary)</option>
-              <option value="suspected_infectious">Findings suggest infectious/inflammatory</option>
+              <option value="awaiting_prior">Prior chest CT being located for comparison</option>
+              <option value="suspected_infectious">Findings suggestive of infectious/inflammatory process</option>
             </select>
           </div>
 <div class="row lr-find-box">
@@ -619,8 +619,8 @@ a{color:#0d5bd7}
 <div id="cyst_ui">
   <div>
     <label class="small-muted">Current morphology</label>
-    <div class="chip-group" id="cyst_morph" data-value="thin">
-      <button type="button" class="chip active" data-val="thin">Thin-walled</button>
+    <div class="chip-group" id="cyst_morph" data-value="thick">
+      <button type="button" class="chip" data-val="thin">Thin-walled</button>
       <button type="button" class="chip" data-val="thick">Thick-walled</button>
       <button type="button" class="chip" data-val="multiloc">Multilocular</button>
     </div>
@@ -633,7 +633,7 @@ a{color:#0d5bd7}
       </div>
   </div>
   <div id="cyst_prog_details" style="display:none">
-    <label class="small-muted">Progression details (optional)</label>
+    <label class="small-muted">Progression details</label>
     <div class="chip-group" id="cyst_progchips">
         <button type="button" class="chip" data-val="growing_cystic">Growing cystic component</button>
       <button type="button" class="chip chip-muted" data-val="becomes_multiloc">Becomes multilocular</button>
@@ -870,7 +870,7 @@ function setLrResult(cat){
     if(m==='partsolid'){ ensurePartListeners(); setTimeout(togglePartSolidSC, 0); }
   }
 
-  function lr_compute(){
+  function lr_compute_internal(){
     // Preflight presence checks per mode to catch any missing elements
     var _mdEl = byId('lr_mode'); var _mdVal = _mdEl ? _mdEl.value : 'solid';
     var missing = [];
@@ -1048,6 +1048,8 @@ function setLrResult(cat){
 
     if (!cat){ cat="Unable to categorize"; management="Check inputs."; }
     byId('lr_result').textContent = 'Category: ' + cat + '\nReasons:\n- ' + reason.join('\n- ') + '\nManagement: ' + (typeof management!=='undefined' ? management : '');
+    // Removed HARD OVERRIDE for Thick-walled cyst (v24 patch)
+
     byId('lr_notes').innerHTML = '<div class="muted">Notes: Short-interval FU downgrades may apply per Lung-RADS v2022.</div>';
   }
 
@@ -1225,7 +1227,36 @@ function setupCystChips(){
 
       // Normalize: show all by default (we'll hide selectively)
       var detBtns = details.querySelectorAll('.chip');
-      for (var i=0;i<detBtns.length;i++){ detBtns[i].style.display = ''; }
+      for (var i=0;i<detBtns.length;i++){ detBtns[i].style.display = ''; 
+      // Multilocular morphology: status free, but when progression, show only these three details
+      if (m === 'multiloc') {
+        if (s === 'progression') {
+          var allowedMulti = ['growing_multiloc', 'increased_loculation', 'new_increased_opacity'];
+          for (var mm=0; mm<detBtns.length; mm++) {
+            var dv2 = detBtns[mm].getAttribute('data-val');
+            detBtns[mm].style.display = (allowedMulti.indexOf(dv2) !== -1) ? '' : 'none';
+          
+        // Explicitly hide thick-walled-only detail options
+        var thickOnly = ['growing_cystic','becomes_multiloc','growing_wall_or_nodularity'];
+        for (var tx=0; tx<thickOnly.length; tx++){
+          var elx = details && details.querySelector('.chip[data-val="'+thickOnly[tx]+'"]');
+          if (elx) elx.style.display = 'none';
+        }}
+          // enforce order
+          var details = byId('cyst_progchips');
+          ['growing_multiloc', 'increased_loculation', 'new_increased_opacity'].forEach(function(key){
+            var el = details && details.querySelector('.chip[data-val="'+key+'"]');
+            if (el && details) details.appendChild(el);
+          });
+        } else {
+          // Baseline or other: hide progression details and clear selection
+          var details = byId('cyst_progchips');
+          var act2 = details ? details.querySelectorAll('.chip.active') : [];
+          for (var k3=0; k3<act2.length; k3++){ act2[k3].classList.remove('active'); }
+          for (var dd=0; dd<detBtns.length; dd++){ detBtns[dd].style.display = 'none'; }
+        }
+      }
+}
 
       if (m === 'thick') {
         // Status options must be only Baseline/Progression (keep prior logic if present elsewhere)
@@ -1904,6 +1935,7 @@ byId('fl_type').addEventListener('change', fl_updateSolidComp);
     fl_updateSolidComp();
 
     byId('lr_compute').addEventListener('click', function(){ safeRun("lr_compute", lr_compute); 
+    
     // FINAL OVERRIDE: Thick-walled cyst progression → map details correctly
     try{
       var modeSel = byId('lr_mode');
@@ -1923,22 +1955,19 @@ byId('fl_type').addEventListener('change', fl_updateSolidComp);
                 break;
               }
             }
+            var out = byId('lr_result');
             if (activeVal === 'growing_cystic'){
-              // Force category and management for this case
-              cat = '3';
-              mgmt = '6-month LDCT.';
+              if(out) out.innerHTML = 'Category: 3  —  Management: 6-month LDCT.';
             } else if (activeVal === 'becomes_multiloc'){
-              cat = '4A';
-              mgmt = '3-month LDCT; consider PET/CT and/or tissue sampling based on probability of malignancy.';
+              if(out) out.innerHTML = 'Category: 4A  —  Management: 3-month LDCT; consider PET/CT and/or tissue sampling based on probability of malignancy.';
             } else if (activeVal === 'growing_wall_or_nodularity'){
-              cat = '4B';
-              mgmt = 'Diagnostic chest CT ± contrast; consider PET/CT and/or tissue sampling.';
+              if(out) out.innerHTML = 'Category: 4B  —  Management: Diagnostic chest CT ± contrast; consider PET/CT and/or tissue sampling.';
             }
           }
         }
       }
     }catch(_e){} 
-    });
+});
     byId('lr_reset').addEventListener('click', function(){ location.reload(); });
     byId('lr_mode').addEventListener('change', showMode);
     byId('lr_diag_btn').addEventListener('click', lr_diag);
@@ -2577,8 +2606,8 @@ document.addEventListener('DOMContentLoaded', function(){
       var fixCat = null, fixMgmt = null;
       if(m === 'thick' && s === 'progression'){
         if(det === 'growing_cystic'){
-          fixCat = '4A';
-          fixMgmt = '3-month LDCT; consider PET/CT and/or tissue sampling based on probability of malignancy.';
+          fixCat = '3';
+          fixMgmt = '6-month LDCT.';
         } else if(det === 'growing_wall_or_nodularity'){
           fixCat = '4B';
           fixMgmt = 'Diagnostic chest CT ± contrast; consider PET/CT and/or tissue sampling.';
@@ -2658,6 +2687,583 @@ try {
   }
 } catch(__e) { /* no-op */ }
 /* --- END OVERRIDE 2 --- */
+</script>
+
+<script>
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function ensureThickDefault(morph){
+    try{
+      if (!morph) return;
+      var cur = (morph.dataset && morph.dataset.value) ? morph.dataset.value : '';
+      if (cur !== 'thick'){
+        var thickBtn = morph.querySelector('.chip[data-val="thick"]');
+        if (thickBtn){
+          if (typeof setActive === 'function'){ setActive(morph, 'thick'); }
+          else {
+            // Fallback: toggle classes/dataset
+            var chips = morph.querySelectorAll('.chip');
+            for (var i=0;i<chips.length;i++){ chips[i].classList.remove('active'); }
+            thickBtn.classList.add('active');
+            morph.dataset.value = 'thick';
+          }
+        }
+      }
+    }catch(e){ /* swallow */ }
+  }
+
+  function enforceMultilocHides(morph, status, details){
+    try{
+      if (!morph || !status || !details) return;
+      var m = (morph.dataset && morph.dataset.value) ? morph.dataset.value : '';
+      var s = (status.dataset && status.dataset.value) ? status.dataset.value : '';
+      var hideThick = ['growing_cystic','becomes_multiloc','growing_wall_or_nodularity'];
+
+      if (m === 'multiloc' && s === 'progression'){
+        hideThick.forEach(function(val){
+          var el = details.querySelector('.chip[data-val="'+val+'"]');
+          if (el){
+            el.style.display = 'none';
+            if (el.classList.contains('active')) el.classList.remove('active');
+          }
+        });
+      } else {
+        // restore visibility when not multiloc+progression
+        hideThick.forEach(function(val){
+          var el = details.querySelector('.chip[data-val="'+val+'"]');
+          if (el){ el.style.display = ''; }
+        });
+      }
+    }catch(e){ /* swallow */ }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      var morph = byId('cyst_morph');
+      var status = byId('cyst_status');
+      var details = byId('cyst_progchips');
+      if (!morph || !status || !details) return;
+
+      // 1) Default to Thick-walled
+      ensureThickDefault(morph);
+
+      // 2) Enforce hides dynamically
+      var handler = function(ev){
+        enforceMultilocHides(morph, status, details);
+      };
+      morph.addEventListener('click', handler, true);
+      status.addEventListener('click', handler, true);
+      details.addEventListener('click', handler, true);
+
+      // Initial enforce
+      enforceMultilocHides(morph, status, details);
+    }catch(e){ /* swallow */ }
+  });
+})();
+</script>
+
+
+<script>
+// ---- Multilocular cyst progression filter (requested patch) ----
+(function(){
+  function $id(x){ return document.getElementById(x); }
+  function updateCystProgChips(){
+    var morphEl = $id('cyst_morph');
+    var statusEl = $id('cyst_status');
+    var detailsWrap = $id('cyst_prog_details');
+    var details = $id('cyst_progchips');
+    if(!details) return;
+    // Default: show all chips
+    var chips = details.querySelectorAll('.chip');
+    chips.forEach(function(ch){ ch.style.display = ''; });
+    // Show progression details only when Status = progression
+    if(detailsWrap && statusEl){
+      var status = (statusEl.dataset && statusEl.dataset.value) || statusEl.getAttribute('data-value') || '';
+      detailsWrap.style.display = (status === 'progression') ? 'block' : 'none';
+    }
+    // If Multilocular + Progression -> only 3 chips
+    if(morphEl && statusEl){
+      var morph = (morphEl.dataset && morphEl.dataset.value) || morphEl.getAttribute('data-value') || '';
+      var status = (statusEl.dataset && statusEl.dataset.value) || statusEl.getAttribute('data-value') || '';
+      if(morph === 'multiloc' && status === 'progression'){
+        var allowed = new Set(['growing_multiloc','increased_loculation','new_or_increased_opacity']);
+        chips.forEach(function(ch){
+          var val = ch.getAttribute('data-val');
+          if(!allowed.has(val)) ch.style.display = 'none';
+        });
+      }
+    }
+  }
+
+  function wireChipGroup(id){
+    var grp = $id(id);
+    if(!grp) return;
+    grp.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      // toggle active class
+      grp.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
+      btn.classList.add('active');
+      // store value on dataset for our logic
+      grp.dataset.value = val;
+      updateCystProgChips();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      wireChipGroup('cyst_morph');
+      wireChipGroup('cyst_status');
+      // Fallback: also observe any change to hidden select if present
+      ['lr_cyst_mode'].forEach(function(id){
+        var el = $id(id);
+        if(el){ el.addEventListener('change', updateCystProgChips); }
+      });
+      updateCystProgChips();
+    }catch(_e){ /* no-op */ }
+  });
+})();
+</script>
+
+<script>
+// ---- Thin-walled cyst restriction (requested patch 2) ----
+(function(){
+  function $id(x){ return document.getElementById(x); }
+  function updateThinCystUI(){
+    var morphEl = $id('cyst_morph');
+    var statusGrp = $id('cyst_status');
+    var details = $id('cyst_progchips');
+    if(!morphEl || !statusGrp || !details) return;
+    var morph = (morphEl.dataset && morphEl.dataset.value) || morphEl.getAttribute('data-value') || '';
+    var chips = statusGrp.querySelectorAll('.chip');
+    var detchips = details.querySelectorAll('.chip');
+    // Reset all displays
+    chips.forEach(ch => ch.style.display = '');
+    detchips.forEach(ch => ch.style.display = '');
+    if(morph === 'thin'){
+      // Only Progression visible
+      chips.forEach(ch => {
+        var v = ch.getAttribute('data-val');
+        if(v !== 'progression') ch.style.display = 'none';
+        else {
+          // auto-select Progression
+          chips.forEach(c => c.classList.remove('active'));
+          ch.classList.add('active');
+          statusGrp.dataset.value = 'progression';
+        }
+      });
+      // Only Growing cystic component visible
+      detchips.forEach(ch => {
+        if(ch.getAttribute('data-val') !== 'growing_cystic') ch.style.display = 'none';
+      });
+      var detwrap = $id('cyst_prog_details');
+      if(detwrap) detwrap.style.display = 'block';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    ['cyst_morph','cyst_status'].forEach(id=>{
+      var el=$id(id);
+      if(el){
+        el.addEventListener('click',updateThinCystUI);
+      }
+    });
+    updateThinCystUI();
+  });
+})();
+</script>
+
+<script>
+// ---- Thin-walled cyst restriction (updated patch 3) ----
+(function(){
+  function $id(x){ return document.getElementById(x); }
+  function updateThinCystUI(){
+    var morphEl = $id('cyst_morph');
+    var statusGrp = $id('cyst_status');
+    var details = $id('cyst_progchips');
+    if(!morphEl || !statusGrp || !details) return;
+    var morph = (morphEl.dataset && morphEl.dataset.value) || morphEl.getAttribute('data-value') || '';
+    var chips = statusGrp.querySelectorAll('.chip');
+    var detchips = details.querySelectorAll('.chip');
+    // Reset all displays
+    chips.forEach(ch => ch.style.display = '');
+    detchips.forEach(ch => ch.style.display = '');
+    if(morph === 'thin'){
+      // Only Progression visible
+      chips.forEach(ch => {
+        var v = ch.getAttribute('data-val');
+        if(v !== 'progression') ch.style.display = 'none';
+        else {
+          // auto-select Progression
+          chips.forEach(c => c.classList.remove('active'));
+          ch.classList.add('active');
+          statusGrp.dataset.value = 'progression';
+        }
+      });
+      // Only Becomes multilocular visible
+      detchips.forEach(ch => {
+        if(ch.getAttribute('data-val') !== 'becomes_multiloc') ch.style.display = 'none';
+      });
+      var detwrap = $id('cyst_prog_details');
+      if(detwrap) detwrap.style.display = 'block';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    ['cyst_morph','cyst_status'].forEach(id=>{
+      var el=$id(id);
+      if(el){
+        el.addEventListener('click',updateThinCystUI);
+      }
+    });
+    updateThinCystUI();
+  });
+})();
+</script>
+
+<script>
+// ---- Unified cyst logic patch (v21) ----
+(function(){
+  function $id(x){ return document.getElementById(x); }
+  function updateCystUI(){
+    var morphEl = $id('cyst_morph');
+    var statusGrp = $id('cyst_status');
+    var details = $id('cyst_progchips');
+    var detwrap = $id('cyst_prog_details');
+    if(!morphEl || !statusGrp || !details) return;
+
+    var morph = (morphEl.dataset && morphEl.dataset.value) || morphEl.getAttribute('data-value') || '';
+    var status = (statusGrp.dataset && statusGrp.dataset.value) || statusGrp.getAttribute('data-value') || '';
+    var chips = statusGrp.querySelectorAll('.chip');
+    var detchips = details.querySelectorAll('.chip');
+    chips.forEach(ch => ch.style.display = '');
+    detchips.forEach(ch => ch.style.display = '');
+
+    // Default: show all progression chips only if Status=progression
+    if(detwrap) detwrap.style.display = (status === 'progression') ? 'block' : 'none';
+
+    // --- Thin-walled ---
+    if(morph === 'thin'){
+      // Only Progression visible and auto-selected
+      chips.forEach(ch => {
+        var v = ch.getAttribute('data-val');
+        if(v !== 'progression') ch.style.display = 'none';
+        else {
+          chips.forEach(c => c.classList.remove('active'));
+          ch.classList.add('active');
+          statusGrp.dataset.value = 'progression';
+          status = 'progression';
+        }
+      });
+      // Only Becomes multilocular
+      detchips.forEach(ch => {
+        if(ch.getAttribute('data-val') !== 'becomes_multiloc') ch.style.display = 'none';
+      });
+      if(detwrap) detwrap.style.display = 'block';
+    }
+
+    // --- Multilocular ---
+    if(morph === 'multiloc' && status === 'progression'){
+      var allowed = new Set(['growing_multiloc','increased_loculation','new_or_increased_opacity']);
+      detchips.forEach(ch => {
+        var val = ch.getAttribute('data-val');
+        if(!allowed.has(val)) ch.style.display = 'none';
+      });
+    }
+
+    // --- Thick-walled ---
+    if(morph === 'thick' && status === 'progression'){
+      var allowed2 = new Set(['growing_cystic','becomes_multiloc','growing_wall_or_nodularity']);
+      detchips.forEach(ch => {
+        var val = ch.getAttribute('data-val');
+        if(!allowed2.has(val)) ch.style.display = 'none';
+      });
+    }
+  }
+
+  function wireChipGroup(id){
+    var grp = $id(id);
+    if(!grp) return;
+    grp.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      grp.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      grp.dataset.value = val;
+      updateCystUI();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    wireChipGroup('cyst_morph');
+    wireChipGroup('cyst_status');
+    updateCystUI();
+  });
+})();
+</script>
+
+<script>
+// ---- v22 cyst chip fix: prevent reset when clicking inside details ----
+(function(){
+  function $id(x){ return document.getElementById(x); }
+  function updateCystUI(){
+    var morphEl = $id('cyst_morph');
+    var statusGrp = $id('cyst_status');
+    var details = $id('cyst_progchips');
+    var detwrap = $id('cyst_prog_details');
+    if(!morphEl || !statusGrp || !details) return;
+
+    var morph = (morphEl.dataset && morphEl.dataset.value) || morphEl.getAttribute('data-value') || '';
+    var status = (statusGrp.dataset && statusGrp.dataset.value) || statusGrp.getAttribute('data-value') || '';
+    var chips = statusGrp.querySelectorAll('.chip');
+    var detchips = details.querySelectorAll('.chip');
+
+    // Always start with all hidden, then selectively unhide
+    chips.forEach(ch => ch.style.display = '');
+    detchips.forEach(ch => ch.style.display = 'none');
+
+    // Default visibility for progression details block
+    if(detwrap) detwrap.style.display = (status === 'progression') ? 'block' : 'none';
+
+    // --- Thin-walled ---
+    if(morph === 'thin'){
+      chips.forEach(ch => {
+        var v = ch.getAttribute('data-val');
+        if(v !== 'progression') ch.style.display = 'none';
+        else {
+          chips.forEach(c => c.classList.remove('active'));
+          ch.classList.add('active');
+          statusGrp.dataset.value = 'progression';
+          status = 'progression';
+        }
+      });
+      detchips.forEach(ch => {
+        if(ch.getAttribute('data-val') === 'becomes_multiloc') ch.style.display = '';
+      });
+      if(detwrap) detwrap.style.display = 'block';
+    }
+
+    // --- Multilocular ---
+    if(morph === 'multiloc' && status === 'progression'){
+      var allowed = new Set(['growing_multiloc','increased_loculation','new_or_increased_opacity']);
+      detchips.forEach(ch => {
+        if(allowed.has(ch.getAttribute('data-val'))) ch.style.display = '';
+      });
+    }
+
+    // --- Thick-walled ---
+    if(morph === 'thick' && status === 'progression'){
+      var allowed2 = new Set(['growing_cystic','becomes_multiloc','growing_wall_or_nodularity']);
+      detchips.forEach(ch => {
+        if(allowed2.has(ch.getAttribute('data-val'))) ch.style.display = '';
+      });
+    }
+  }
+
+  function wireChipGroup(id){
+    var grp = $id(id);
+    if(!grp) return;
+    grp.addEventListener('click', function(e){
+      // Prevent clicks inside details from triggering full reset
+      if (e.target.closest('#cyst_progchips')) return;
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      var val = btn.getAttribute('data-val');
+      grp.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      grp.dataset.value = val;
+      updateCystUI();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    wireChipGroup('cyst_morph');
+    wireChipGroup('cyst_status');
+    updateCystUI();
+  });
+})();
+</script>
+
+<script>
+// ---- v23: Full cyst logic isolation and persistent filtering ----
+(function(){
+  function $id(x){ return document.getElementById(x); }
+  function updateCystUI(){
+    var morphEl = $id('cyst_morph');
+    var statusGrp = $id('cyst_status');
+    var details = $id('cyst_progchips');
+    var detwrap = $id('cyst_prog_details');
+    if(!morphEl || !statusGrp || !details) return;
+
+    var morph = morphEl.dataset?.value || morphEl.getAttribute('data-value') || '';
+    var status = statusGrp.dataset?.value || statusGrp.getAttribute('data-value') || '';
+
+    // Determine allowed progression chips
+    var allowed = null;
+    if(morph === 'thin'){
+      // Only Progression, auto-selected
+      status = 'progression';
+      statusGrp.dataset.value = 'progression';
+      allowed = new Set(['becomes_multiloc']);
+    } else if(morph === 'multiloc' && status === 'progression'){
+      allowed = new Set(['growing_multiloc','increased_loculation','new_or_increased_opacity']);
+    } else if(morph === 'thick' && status === 'progression'){
+      allowed = new Set(['growing_cystic','becomes_multiloc','growing_wall_or_nodularity']);
+    }
+
+    // --- Handle visibility of status buttons ---
+    var statusBtns = statusGrp.querySelectorAll('.chip');
+    statusBtns.forEach(btn => {
+      if(morph === 'thin'){
+        // only Progression visible
+        btn.style.display = (btn.getAttribute('data-val') === 'progression') ? '' : 'none';
+        if(btn.getAttribute('data-val') === 'progression'){
+          statusBtns.forEach(c=>c.classList.remove('active'));
+          btn.classList.add('active');
+        }
+      } else {
+        btn.style.display = '';
+      }
+    });
+
+    // --- Handle visibility of progression detail chips ---
+    var detchips = details.querySelectorAll('.chip');
+    detchips.forEach(ch => {
+      if(!allowed) {
+        // default: show all if not restricted
+        ch.style.display = '';
+      } else {
+        ch.style.display = allowed.has(ch.getAttribute('data-val')) ? '' : 'none';
+      }
+    });
+
+    // Show or hide progression section
+    if(detwrap){
+      detwrap.style.display = (status === 'progression') ? 'block' : 'none';
+    }
+  }
+
+  function wireChipGroup(id){
+    var grp = $id(id);
+    if(!grp) return;
+    grp.addEventListener('click', function(e){
+      var btn = e.target.closest('.chip');
+      if(!btn) return;
+      grp.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      grp.dataset.value = btn.getAttribute('data-val');
+      updateCystUI();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // Neutralize any previous cyst setup scripts
+    if(window.setupCystChips){ window.setupCystChips = function(){}; }
+    // Wire our groups
+    wireChipGroup('cyst_morph');
+    wireChipGroup('cyst_status');
+    wireChipGroup('cyst_progchips');
+    updateCystUI();
+  });
+})();
+</script>
+
+<script>
+// v34 definitive interception patch: stop autocompute for cyst chips
+document.addEventListener('DOMContentLoaded', function(){
+  const blockers = document.querySelectorAll('[data-val="growing_cystic"], [data-val="growing_wall_or_nodularity"]');
+  blockers.forEach(ch => {
+    ch.addEventListener('click', function(e){
+      // Stop any event from propagating to handlers that call lr_compute()
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      // Just toggle UI state without computing
+      if (ch.classList.contains('active')) {
+        ch.classList.remove('active');
+      } else {
+        const group = ch.closest('#cyst_progchips');
+        if(group) group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+        ch.classList.add('active');
+      }
+    }, true);
+  });
+});
+</script>
+
+<script>
+// v35: Wrap lr_compute to skip autocompute for cyst-specific modes
+document.addEventListener('DOMContentLoaded', function(){
+  if (typeof window.lr_compute === 'function') {
+    const original_lr_compute = window.lr_compute;
+    window.lr_compute = function(){
+      try {
+        const modeEl = document.getElementById('lr_cyst_mode');
+        const val = modeEl ? modeEl.value.toLowerCase() : '';
+        if (val.includes('growing_cystic') || val.includes('growing_wall_or_nodularity')) {
+          console.log('lr_compute skipped for cyst autocompute protection');
+          return;
+        }
+      } catch(e) { console.warn('lr_compute wrapper error', e); }
+      return original_lr_compute.apply(this, arguments);
+    };
+  }
+});
+</script>
+
+<script>
+// v36: Redefine lr_compute to guard against cyst autocompute
+function lr_compute() {
+  try {
+    var modeEl = document.getElementById('lr_cyst_mode');
+    var val = modeEl ? modeEl.value.toLowerCase() : '';
+    if (val.includes('growing_cystic') || val.includes('growing_wall_or_nodularity')) {
+      console.log('lr_compute blocked for cyst autocompute');
+      return;
+    }
+  } catch(e) { console.warn('lr_compute guard error', e); }
+  return lr_compute_internal.apply(this, arguments);
+}
+</script>
+
+<script>
+// v37 definitive cyst fix: redefine lr_setCat to remove autocompute behavior
+document.addEventListener('DOMContentLoaded', function(){
+  if (typeof window.lr_setCat === 'function') {
+    const old_lr_setCat = window.lr_setCat;
+    window.lr_setCat = function(cat) {
+      try {
+        // Call original logic but intercept any internal lr_compute calls by temporarily disabling them
+        const old_lr_compute = window.lr_compute;
+        window.lr_compute = function() {
+          console.log('lr_compute suppressed inside lr_setCat redefinition');
+          return;
+        };
+        old_lr_setCat.call(this, cat);
+        window.lr_compute = old_lr_compute; // restore afterward
+      } catch(e) {
+        console.warn('Error redefining lr_setCat', e);
+      }
+    };
+  }
+});
+</script>
+
+<script>
+// v38: Make lr_cyst_mode inert (disable any reactive auto-calls tied to .value changes)
+document.addEventListener('DOMContentLoaded', function(){
+  var el = document.getElementById('lr_cyst_mode');
+  if (el) {
+    try {
+      let val = el.value;
+      Object.defineProperty(el, 'value', {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: val
+      });
+    } catch(e) { /* silent */ }
+  }
+});
 </script>
 </body>
 </html>
