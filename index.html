@@ -1980,11 +1980,11 @@ byId('fl_type').addEventListener('change', fl_updateSolidComp);
             }
             var out = byId('lr_result');
             if (activeVal === 'growing_cystic'){
-              if(out) out.innerHTML = 'Category: 3  —  Management: 6-month LDCT.';
+              if(out) out.innerHTML = 'Category: 3\rManagement: 6-month LDCT.';
             } else if (activeVal === 'becomes_multiloc'){
-              if(out) out.innerHTML = 'Category: 4A  —  Management: 3-month LDCT; consider PET/CT and/or tissue sampling based on probability of malignancy.';
+              if(out) out.innerHTML = 'Category: 4A\rManagement: 3-month LDCT; PET/CT may be considered if there is a ≥ 8 mm solid nodule or solid component.';
             } else if (activeVal === 'growing_wall_or_nodularity'){
-              if(out) out.innerHTML = 'Category: 4B  —  Management: Diagnostic chest CT ± contrast; consider PET/CT and/or tissue sampling.';
+              if(out) out.innerHTML = 'Category: 4B\rManagement: Referral for further clinical evaluation. Diagnostic chest CT (± IV contrast); PET/CT may be considered if there is a ≥ 8 mm solid nodule or solid component; tissue sampling and/or surgical evaluation as appropriate.';
             }
           }
         }
@@ -2647,16 +2647,16 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // Wire correction after compute clicks and user interactions
-  var btn = document.getElementById('lr_compute');
-  if(btn){
-    btn.addEventListener('click', function(){ setTimeout(correctCystCategory, 0); setTimeout(correctCystCategory, 120); }, true);
-  }
+//  var btn = document.getElementById('lr_compute');
+//  if(btn){
+//    btn.addEventListener('click', function(){ setTimeout(correctCystCategory, 0); setTimeout(correctCystCategory, 120); }, true);
+//  }
   // Also run on general interactions inside Lung-RADS to keep in sync
-  var root = document.getElementById('lungrads');
-  if(root){
-    ['change','click'].forEach(function(ev){
-      root.addEventListener(ev, function(){ setTimeout(correctCystCategory, 120); }, true);
-    });
+//  var root = document.getElementById('lungrads');
+//  if(root){
+//    ['change','click'].forEach(function(ev){
+//      root.addEventListener(ev, function(){ setTimeout(correctCystCategory, 120); }, true);
+//    });
   }
 })();
 </script>
